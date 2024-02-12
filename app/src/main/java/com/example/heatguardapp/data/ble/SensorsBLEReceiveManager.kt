@@ -212,8 +212,6 @@ class SensorsBLEReceiveManager @Inject constructor(
         gatt?.disconnect()
     }
 
-
-
     override fun closeConnection() {
         bleScanner.stopScan(scanCallback)
         val characteristic = findCharacteristics(RASP_SENSOR_SERVICE_UIID, RASP_SENSOR_CHARACTERISTICS_UUID)
