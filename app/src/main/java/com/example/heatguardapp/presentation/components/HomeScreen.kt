@@ -1,8 +1,6 @@
 package com.example.heatguardapp.presentation.components
 
-import android.bluetooth.BluetoothAdapter
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +17,6 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Divider
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,22 +36,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.heatguardapp.R
-import com.example.heatguardapp.presentation.permissions.SystemBroadcastReceiver
 import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
-    navController: NavController,
-    onBluetoothChanged: () -> Unit) {
+    navController: NavController) {
 
-    SystemBroadcastReceiver(systemAction = BluetoothAdapter.ACTION_STATE_CHANGED){
-        bluetoothState ->
-        val action = bluetoothState?.action ?: return@SystemBroadcastReceiver
-        if(action == BluetoothAdapter.ACTION_STATE_CHANGED){
-            onBluetoothChanged()
-        }
-    }
-    var drawerState = rememberDrawerState(DrawerValue.Closed)
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val connectedToDevice = remember { mutableStateOf(false) }
 

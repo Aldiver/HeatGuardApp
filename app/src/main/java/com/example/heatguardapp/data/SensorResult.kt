@@ -5,5 +5,6 @@ data class SensorResult(
     val skinTemp: Float,
     val skinResistance: Float,
     val ambientHumidity: Float,
-    val ambientTemperature: Float
+    val ambientTemperature: Float,
+    val connectionState: ConnectionState
 )

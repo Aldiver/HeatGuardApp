@@ -7,7 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import com.example.heatguardapp.ui.theme.BluetoothChatTheme
+import com.example.heatguardapp.ui.theme.HeatGuardTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            BluetoothChatTheme {
+            HeatGuardTheme {
               AppNavigator(
                   onBluetoothStateChanged = {
                       showBluetoothDialog()
@@ -34,12 +34,12 @@ class MainActivity : ComponentActivity() {
         showBluetoothDialog()
     }
 
-    private var isBluetoothDialogAlreadyShown = false;
+    private var isBluetoothDialogAlreadyShown = false
     private fun showBluetoothDialog(){
         if(!bluetoothAdapter.isEnabled){
             val enableBluetoothIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startBluetoothIntentForResult.launch(enableBluetoothIntent)
-            isBluetoothDialogAlreadyShown = true;
+            isBluetoothDialogAlreadyShown = true
         }
     }
 

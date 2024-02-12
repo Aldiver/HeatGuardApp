@@ -3,6 +3,8 @@ package com.example.heatguardapp.di
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import com.example.heatguardapp.data.SensorResultManager
+import com.example.heatguardapp.data.ble.SensorsBLEReceiveManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,5 +21,14 @@ object AppModule {
     fun provideBluetoothController(@ApplicationContext context: Context): BluetoothAdapter {
         val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         return manager.adapter
+    }
+
+    @Provides
+    @Singleton
+    fun provideSensorReceiveManager(
+        @ApplicationContext context: Context,
+        bluetoothAdapter: BluetoothAdapter
+    ) : SensorResultManager{
+        return SensorsBLEReceiveManager(bluetoothAdapter, context)
     }
 }

@@ -31,7 +31,7 @@ fun AppNavigator(
             }
         }
         composable(Screen.HomeScreen.route) {
-            HomeScreen(navController, onBluetoothStateChanged)
+            HomeScreen(navController)
         }
         composable(Screen.UserScreen.route) {
             UserScreen()
@@ -40,7 +40,9 @@ fun AppNavigator(
             StatScreen()
         }
         composable(Screen.BluetoothScanScreen.route) {
-            BluetoothScanScreen()
+            BluetoothScanScreen(
+                onBluetoothStateChanged
+            )
         }
     }
 }
