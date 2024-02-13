@@ -2,6 +2,7 @@ package com.example.heatguardapp.presentation
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -23,7 +24,17 @@ class SensorsViewModel @Inject constructor(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    var heartRate by mutableFloatStateOf(0f)
+    var heartRate by mutableIntStateOf(0)
+        private set
+    var coreTemp  by mutableIntStateOf(0)
+        private set
+    var skinRes by mutableStateOf<String?>(null)
+        private set
+    var skinTemp  by mutableFloatStateOf(0f)
+        private set
+    var ambientHumidity by mutableIntStateOf(0)
+        private set
+    var ambientTemperature  by mutableFloatStateOf(0f)
         private set
 
     var connectionState by mutableStateOf<ConnectionState>(ConnectionState.Uninitialized)
@@ -35,6 +46,11 @@ class SensorsViewModel @Inject constructor(
                     is Resource.Success -> {
                         connectionState = result.data.connectionState
                         heartRate = result.data.heartRate
+                        coreTemp = result.data.coreTemp
+                        skinRes = result.data.skinRes
+                        skinTemp = result.data.skinTemp
+                        ambientHumidity = result.data.ambientHumidity
+                        ambientTemperature = result.data.ambientTemperature
                     }
 
                     is Resource.Loading -> {
