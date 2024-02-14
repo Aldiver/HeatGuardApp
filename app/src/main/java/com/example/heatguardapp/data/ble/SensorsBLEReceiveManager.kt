@@ -32,8 +32,7 @@ class SensorsBLEReceiveManager @Inject constructor(
     private val DEVICE_NAME = "HEATGUARD"
     private val RASP_SENSOR_SERVICE_UIID = "00001811-0000-1000-8000-00805f9b34fb"
     private val RASP_SENSOR_CHARACTERISTICS_UUID = "00000540-0000-1000-8000-00805f9b34fb"
-    override val data: MutableSharedFlow<Resource<SensorResult>>
-        get() = MutableSharedFlow()
+    override val data: MutableSharedFlow<Resource<SensorResult>> = MutableSharedFlow()
 
     private val bleScanner by lazy {
         bluetoothAdapter.bluetoothLeScanner
@@ -80,10 +79,11 @@ class SensorsBLEReceiveManager @Inject constructor(
                 } else if(newState == BluetoothProfile.STATE_DISCONNECTED){
                     coroutineScope.launch {
                         data.emit(Resource.Success(data = SensorResult(
+                            0,
+                            0,
+                            "Unknown",
                             0f,
-                            0f,
-                            0f,
-                            0f,
+                            0,
                             0f,
                             ConnectionState.Disconnected
                         )))
@@ -112,11 +112,14 @@ class SensorsBLEReceiveManager @Inject constructor(
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             with(gatt){
+                Log.d("BLEReceiveManager","onServuce?")
                 printGattTable()
                 coroutineScope.launch {
                     data.emit(Resource.Loading(message = "Adjusting MTU space..."))
                 }
                 gatt.requestMtu(517)
+                val characteristic = findCharacteristics(RASP_SENSOR_SERVICE_UIID, RASP_SENSOR_CHARACTERISTICS_UUID)
+                characteristic?.let { enableNotification(it) }
             }
         }
 
@@ -125,6 +128,7 @@ class SensorsBLEReceiveManager @Inject constructor(
             if(characteristic == null){
                 coroutineScope.launch {
                     data.emit(Resource.Error(errorMessage = "Could not find temp and humidity publisher"))
+                    Log.d("BLEReceiveManager","Could not find temp and humidity publisher")
                 }
                 return
             }
@@ -136,24 +140,39 @@ class SensorsBLEReceiveManager @Inject constructor(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic
         ) {
+            Log.d("BLEReceiveManager","reading characteristics?")
             with(characteristic){
                 when(uuid){
                     UUID.fromString(RASP_SENSOR_CHARACTERISTICS_UUID) -> {
-                        //XX XX XX XX XX XX
-                        val multiplicator = if(value.first().toInt()> 0) -1 else 1
-                        val temperature = value[1].toInt() + value[2].toInt() / 10f
-                        val humidity = value[4].toInt() + value[5].toInt() / 10f
-                        val tempHumidityResult = SensorResult(
-                            multiplicator * temperature,
-                            humidity,
-                            humidity,
-                            humidity,
-                            humidity,
-                            ConnectionState.Connected
+                        val heartRate = value[0].toInt()
+                        val coreTemp = value[1].toInt()
+                        val skinRes = when (value[2].toInt()) {
+                            0 -> "Low"
+                            1 -> "Med"
+                            2 -> "High"
+                            else -> "Unknown"
+                        }
+                        val skinTempMultiplier = if (value[3].toInt() > 0) -1 else 1
+                        val skinTempValue = value[4].toInt() + value[5].toInt() / 10f
+                        val skinTemp = skinTempMultiplier * skinTempValue
+                        val ambientHumidity = value[6].toInt()
+                        val ambientTempMultiplier = if (value[7].toInt() > 0) -1 else 1
+                        val ambientTempValue = value[8].toInt() + value[9].toInt() / 10f
+                        val ambientTemperature = ambientTempMultiplier * ambientTempValue
+
+                        // Creating and returning the SensorResult object
+                        val sensorData = SensorResult(
+                            heartRate = heartRate,
+                            coreTemp = coreTemp,
+                            skinRes = skinRes,
+                            skinTemp = skinTemp,
+                            ambientHumidity = ambientHumidity,
+                            ambientTemperature = ambientTemperature,
+                            connectionState = ConnectionState.Connected // Assuming you have a default ConnectionState value
                         )
                         coroutineScope.launch {
                             data.emit(
-                                Resource.Success(data = tempHumidityResult)
+                                Resource.Success(data = sensorData)
                             )
                         }
                     }
@@ -175,6 +194,7 @@ class SensorsBLEReceiveManager @Inject constructor(
         characteristic.getDescriptor(cccdUuid)?.let { cccdDescriptor ->
             if(gatt?.setCharacteristicNotification(characteristic, true) == false){
                 Log.d("BLEReceiveManager","set characteristics notification failed")
+                print("this really happend or nah?")
                 return
             }
             writeDescription(cccdDescriptor, payload)

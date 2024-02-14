@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -84,88 +85,32 @@ fun BluetoothScanScreen(
         }
     }
 
-    Box(
+    //Display data here
+    //just a column is okay already and simple
+    Column(
         modifier = Modifier
-            .fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ){
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .aspectRatio(1f)
-                .border(
-                    BorderStroke(
-                        5.dp, Color.Blue
-                    ),
-                    RoundedCornerShape(10.dp)
-                ),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
-            if(bleConnectionState == ConnectionState.CurrentlyInitializing){
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(5.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ){
-                    CircularProgressIndicator()
-                    if(viewModel.initializingMessage != null){
-                        Text(
-                            text = viewModel.initializingMessage!!
-                        )
-                    }
-                }
-            }else if(!permissionState.allPermissionsGranted){
-                Text(
-                    text = "Go to the app setting and allow the missing permissions.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(10.dp),
-                    textAlign = TextAlign.Center
-                )
-            }else if(viewModel.errorMessage != null){
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = viewModel.errorMessage!!
-                    )
-                    Button(
-                        onClick = {
-                            if(permissionState.allPermissionsGranted){
-                                viewModel.initializeConnection()
-                            }
-                        }
-                    ) {
-                        Text(
-                            "Try again"
-                        )
-                    }
-                }
-            }else if(bleConnectionState == ConnectionState.Connected){
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ){
-                    Text(
-                        text = "Humidity: ${viewModel.heartRate}",
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                    Text(
-                        text = "Humidity: ${viewModel.heartRate}",
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-            }else if(bleConnectionState == ConnectionState.Disconnected){
-                Button(onClick = {
-                    viewModel.initializeConnection()
-                }) {
-                    Text("Initialize again")
-                }
-            }
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Error message when there's an error
+        if (bleConnectionState == ConnectionState.Uninitialized) {
+            Text(
+                text = "Error: ${viewModel.errorMessage}",
+                color = Color.Red,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                textAlign = TextAlign.Center
+            )
         }
+
+        // Sensor data
+        Text("Heart Rate: ${viewModel.heartRate}")
+        Text("Core Temp: ${viewModel.coreTemp}")
+        Text("Skin Resistance: ${viewModel.skinRes ?: "N/A"}")
+        Text("Skin Temp: ${viewModel.skinTemp}")
+        Text("Ambient Humidity: ${viewModel.ambientHumidity}")
+        Text("Ambient Temperature: ${viewModel.ambientTemperature}")
     }
 }
