@@ -32,8 +32,7 @@ class SensorsBLEReceiveManager @Inject constructor(
     private val DEVICE_NAME = "HEATGUARD"
     private val RASP_SENSOR_SERVICE_UIID = "00001811-0000-1000-8000-00805f9b34fb"
     private val RASP_SENSOR_CHARACTERISTICS_UUID = "00000540-0000-1000-8000-00805f9b34fb"
-    override val data: MutableSharedFlow<Resource<SensorResult>>
-        get() = MutableSharedFlow()
+    override val data: MutableSharedFlow<Resource<SensorResult>> = MutableSharedFlow()
 
     private val bleScanner by lazy {
         bluetoothAdapter.bluetoothLeScanner
@@ -129,6 +128,7 @@ class SensorsBLEReceiveManager @Inject constructor(
             if(characteristic == null){
                 coroutineScope.launch {
                     data.emit(Resource.Error(errorMessage = "Could not find temp and humidity publisher"))
+                    Log.d("BLEReceiveManager","Could not find temp and humidity publisher")
                 }
                 return
             }

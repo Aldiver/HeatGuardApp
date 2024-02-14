@@ -93,15 +93,6 @@ fun BluetoothScanScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Circular Progress Indicator when loading
-        if (bleConnectionState == ConnectionState.CurrentlyInitializing) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(48.dp)
-                    .align(Alignment.CenterHorizontally)
-            )
-        }
-
         // Error message when there's an error
         if (bleConnectionState == ConnectionState.Uninitialized) {
             Text(
