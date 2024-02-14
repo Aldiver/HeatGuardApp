@@ -1,5 +1,6 @@
 package com.example.heatguardapp.presentation
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -24,7 +25,7 @@ class SensorsViewModel @Inject constructor(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    var heartRate by mutableIntStateOf(0)
+    var heartRate by mutableIntStateOf(12)
         private set
     var coreTemp  by mutableIntStateOf(0)
         private set
@@ -40,9 +41,14 @@ class SensorsViewModel @Inject constructor(
     var connectionState by mutableStateOf<ConnectionState>(ConnectionState.Uninitialized)
 
     private fun subscribeToChanges(){
+        Log.d("viewmodel", "subscribe")
         viewModelScope.launch {
-            sensorResultManager.data.collect{
-                result -> when(result){
+            Log.d("viewmodel", "launch")
+            Log.d("viewmodel", "$sensorResultManager")
+            sensorResultManager.data.collect(){
+                result ->
+                Log.d("viewmodel", "collect")
+                when(result){
                     is Resource.Success -> {
                         connectionState = result.data.connectionState
                         heartRate = result.data.heartRate
@@ -51,6 +57,7 @@ class SensorsViewModel @Inject constructor(
                         skinTemp = result.data.skinTemp
                         ambientHumidity = result.data.ambientHumidity
                         ambientTemperature = result.data.ambientTemperature
+                        Log.d("View Model observer checkek", "$heartRate")
                     }
 
                     is Resource.Loading -> {

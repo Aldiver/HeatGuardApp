@@ -1,6 +1,7 @@
 package com.example.heatguardapp.presentation.components
 
 import android.bluetooth.BluetoothAdapter
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -80,6 +81,7 @@ fun BluetoothScanScreen(
     LaunchedEffect(key1 = permissionState.allPermissionsGranted){
         if(permissionState.allPermissionsGranted){
             if(bleConnectionState == ConnectionState.Uninitialized){
+                Log.d("View Model observer checkek", "Initialize connection call")
                 viewModel.initializeConnection()
             }
         }
@@ -87,6 +89,7 @@ fun BluetoothScanScreen(
 
     //Display data here
     //just a column is okay already and simple
+
     Column(
         modifier = Modifier
             .fillMaxSize()
