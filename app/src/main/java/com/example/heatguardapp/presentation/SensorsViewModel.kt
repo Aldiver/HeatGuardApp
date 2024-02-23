@@ -111,7 +111,7 @@ class SensorsViewModel @Inject constructor(
 //        val prediction = classifier.classifyHeatStroke(input)
 
 //        inputFeature0.loadBuffer(byteBuffer)
-        inputFeature0.loadArray(floatArrayOf(24.56409212f,35.49766336f,0.243072295f,20.99972554f,155.3364408f,25.7364305f,0f))
+        inputFeature0.loadArray(floatArrayOf(39f, 40.8f, 0.4f, 24f, 166f, 38f, 0f))
         val outputs = model.process(inputFeature0)
         val result = outputs.outputFeature0AsTensorBuffer.floatArray[0]
 
