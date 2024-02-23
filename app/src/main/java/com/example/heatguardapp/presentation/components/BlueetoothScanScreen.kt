@@ -2,39 +2,31 @@ package com.example.heatguardapp.presentation.components
 
 import android.bluetooth.BluetoothAdapter
 import android.util.Log
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.example.heatguardapp.data.ConnectionState
+import com.example.heatguardapp.presentation.SensorsViewModel
 import com.example.heatguardapp.presentation.permissions.PermissionUtils
 import com.example.heatguardapp.presentation.permissions.SystemBroadcastReceiver
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.Lifecycle
-import com.example.heatguardapp.data.ConnectionState
-import com.example.heatguardapp.presentation.SensorsViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -42,6 +34,7 @@ fun BluetoothScanScreen(
     onBluetoothStateChanged:()->Unit,
     viewModel: SensorsViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
 
     SystemBroadcastReceiver(systemAction = BluetoothAdapter.ACTION_STATE_CHANGED){ bluetoothState ->
         val action = bluetoothState?.action ?: return@SystemBroadcastReceiver
@@ -115,5 +108,10 @@ fun BluetoothScanScreen(
         Text("Skin Temp: ${viewModel.skinTemp}")
         Text("Ambient Humidity: ${viewModel.ambientHumidity}")
         Text("Ambient Temperature: ${viewModel.ambientTemperature}")
+
+        Text("Ambient Temperature: ${viewModel.heatStrokeMessage}")
+        Button(onClick = { viewModel.detectHeatStroke(context)}) {
+            Text(text = "Prediction")
+        }
     }
 }

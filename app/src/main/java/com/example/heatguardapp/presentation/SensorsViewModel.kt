@@ -1,5 +1,6 @@
 package com.example.heatguardapp.presentation
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -10,9 +11,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heatguardapp.data.ConnectionState
 import com.example.heatguardapp.data.SensorResultManager
+import com.example.heatguardapp.ml.ModelHeatguard
 import com.example.heatguardapp.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import org.tensorflow.lite.DataType
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import java.nio.ByteBuffer
 import javax.inject.Inject
 @HiltViewModel
 class SensorsViewModel @Inject constructor(
@@ -20,6 +25,8 @@ class SensorsViewModel @Inject constructor(
 ) : ViewModel(){
 
     var initializingMessage by mutableStateOf<String?>(null)
+        private set
+    var heatStrokeMessage by mutableStateOf<String?>("no heatstroke data")
         private set
 
     var errorMessage by mutableStateOf<String?>(null)
@@ -92,4 +99,28 @@ class SensorsViewModel @Inject constructor(
         super.onCleared()
         sensorResultManager.closeConnection()
     }
+
+    fun detectHeatStroke(context: Context) {
+        val model = ModelHeatguard.newInstance(context)
+        val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 7), DataType.FLOAT32)
+        var byteBuffer = ByteBuffer.allocate(4 * 7)
+
+//        val input = floatArrayOf(39f, 40.8f, 0.4f, 24f, 166f, 38f, 0f)
+
+        // Perform classification
+//        val prediction = classifier.classifyHeatStroke(input)
+
+//        inputFeature0.loadBuffer(byteBuffer)
+        inputFeature0.loadArray(floatArrayOf(24.56409212f,35.49766336f,0.243072295f,20.99972554f,155.3364408f,25.7364305f,0f))
+        val outputs = model.process(inputFeature0)
+        val result = outputs.outputFeature0AsTensorBuffer.floatArray[0]
+
+        val final_output = if (result > 0.5) 1 else 0
+        model.close()
+
+        heatStrokeMessage = "Prediction: $final_output"
+        // Print the prediction
+//        println(prediction)
+    }
+
 }
