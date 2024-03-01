@@ -1,5 +1,6 @@
 package com.example.heatguardapp.presentation
 
+import android.app.Application
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -7,10 +8,16 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.room.Room
+import com.example.heatguardapp.dao.AppDatabase
+import com.example.heatguardapp.dao.UserInfoDao
 import com.example.heatguardapp.data.ConnectionState
 import com.example.heatguardapp.data.SensorResultManager
+import com.example.heatguardapp.data.UserInfoEntity
 import com.example.heatguardapp.ml.ModelHeatguard
 import com.example.heatguardapp.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,10 +26,27 @@ import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.nio.ByteBuffer
 import javax.inject.Inject
+
 @HiltViewModel
 class SensorsViewModel @Inject constructor(
-    private val sensorResultManager: SensorResultManager
+    private val sensorResultManager: SensorResultManager,
+    application: Application
 ) : ViewModel(){
+
+    private val userInfoDao: UserInfoDao
+
+    private val db: AppDatabase = Room.databaseBuilder(
+        application.applicationContext,
+        AppDatabase::class.java, "user-info-db"
+    ).build()
+
+    init {
+        userInfoDao = db.userInfoDao()
+    }
+
+    private fun getUserInfo(): LiveData<UserInfoEntity?> {
+        return userInfoDao.getUserInfo().asLiveData()
+    }
 
     var initializingMessage by mutableStateOf<String?>(null)
         private set
@@ -105,13 +129,18 @@ class SensorsViewModel @Inject constructor(
         val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 7), DataType.FLOAT32)
         var byteBuffer = ByteBuffer.allocate(4 * 7)
 
-//        val input = floatArrayOf(39f, 40.8f, 0.4f, 24f, 166f, 38f, 0f)
+        val userInfoLiveData = getUserInfo()
+        val userInfo = userInfoLiveData.value
 
-        // Perform classification
-//        val prediction = classifier.classifyHeatStroke(input)
+        // Extract age and BMI from user info
+        val ageString = userInfo?.age ?: "0" // Default value if age is null
+        val bmiString = userInfo?.bmi ?: "0" // Default value if BMI is null
+        val age = ageString.toFloatOrNull() ?: 0f // Convert age to int, or use default value if conversion fails
+        val bmi = bmiString.toFloatOrNull() ?: 0f
 
-//        inputFeature0.loadBuffer(byteBuffer)
-        inputFeature0.loadArray(floatArrayOf(39f, 40.8f, 0.4f, 24f, 166f, 38f, 0f))
+        val inputArray = floatArrayOf(39f, 40.8f, 0.4f, bmi, 166f, age, 0f)
+
+        inputFeature0.loadArray(inputArray)
         val outputs = model.process(inputFeature0)
         val result = outputs.outputFeature0AsTensorBuffer.floatArray[0]
 

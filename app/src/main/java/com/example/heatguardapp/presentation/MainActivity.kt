@@ -7,6 +7,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.heatguardapp.ui.theme.HeatGuardTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -17,13 +19,15 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var bluetoothAdapter: BluetoothAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        installSplashScreen()
         setContent {
             HeatGuardTheme {
-              AppNavigator(
+                val userViewModel: UserInfoViewModel = viewModel()
+                AppNavigator(
                   onBluetoothStateChanged = {
                       showBluetoothDialog()
-                  }
+                  },
+                    userInfoViewModel = userViewModel
               )
             }
         }
