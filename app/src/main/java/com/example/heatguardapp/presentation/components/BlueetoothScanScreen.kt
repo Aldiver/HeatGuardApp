@@ -193,7 +193,7 @@ fun BluetoothScanScreen(
             ),
         ) {
             Button(
-                onClick = { viewModel.detectHeatStroke(context) },
+                onClick = { viewModel.togglePrediction() },
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .fillMaxSize(),
@@ -204,14 +204,25 @@ fun BluetoothScanScreen(
                 Box(
                     contentAlignment = Alignment.Center
                 ) {
-
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(50.dp),
-                        color = Color.LightGray
-                    )
-                    Text(
-                        text = "Start Prediction  "
-                    )
+                    if (viewModel.togglePrediction) {
+                        if (viewModel.heatStrokeMessage != 1) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(50.dp),
+                                color = Color.LightGray
+                            )
+                            Text(
+                                text = "Analyzing Sensor Data"
+                            )
+                        }else{
+                            Text(
+                                text = "HeatStroke detected"
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Start Prediction"
+                        )
+                    }
                 }
             }
         }

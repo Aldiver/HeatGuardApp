@@ -40,6 +40,9 @@ class SensorsViewModel @Inject constructor(
         AppDatabase::class.java, "user-info-db"
     ).build()
 
+    private val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
+    private val inputFeature0: TensorBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 7), DataType.FLOAT32)
+
     init {
         userInfoDao = db.userInfoDao()
     }
@@ -71,6 +74,9 @@ class SensorsViewModel @Inject constructor(
 
     var connectionState by mutableStateOf<ConnectionState>(ConnectionState.Uninitialized)
 
+    var togglePrediction by mutableStateOf(false)
+        private set
+
     private fun subscribeToChanges(){
         viewModelScope.launch {
             sensorResultManager.data.collect(){
@@ -86,6 +92,9 @@ class SensorsViewModel @Inject constructor(
                         ambientHumidity = result.data.ambientHumidity
                         ambientTemperature = result.data.ambientTemperature
                         Log.d("View Model observer checkek", "$heartRate")
+                        if(togglePrediction){
+                            detectHeatStroke()
+                        }
                     }
 
                     is Resource.Loading -> {
@@ -121,11 +130,10 @@ class SensorsViewModel @Inject constructor(
         sensorResultManager.closeConnection()
     }
 
-    fun detectHeatStroke(context: Context) {
-        viewModelScope.launch {
-            val model = ModelHeatguard.newInstance(context)
-            val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 7), DataType.FLOAT32)
-            var byteBuffer = ByteBuffer.allocate(4 * 7)
+    fun detectHeatStroke() {
+//            val model = ModelHeatguard.newInstance(context)
+//            val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 7), DataType.FLOAT32)
+////            var byteBuffer = ByteBuffer.allocate(4 * 7)
 
             val userInfoLiveData = getUserInfo()
             val userInfo = userInfoLiveData.value
@@ -156,7 +164,9 @@ class SensorsViewModel @Inject constructor(
             model.close()
 
             heatStrokeMessage = final_output
-        }
     }
 
+    fun togglePrediction() {
+        togglePrediction = !togglePrediction
+    }
 }

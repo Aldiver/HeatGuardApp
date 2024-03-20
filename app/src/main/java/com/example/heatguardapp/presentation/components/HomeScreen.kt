@@ -39,7 +39,8 @@ fun HomeScreen(
              Text(
                  text = "HeatGuard",
                  style = MaterialTheme.typography.headlineMedium,
-                 modifier = Modifier
+                 modifier = Modifier,
+                 color = MaterialTheme.colorScheme.primary
              )
 
              Image(
