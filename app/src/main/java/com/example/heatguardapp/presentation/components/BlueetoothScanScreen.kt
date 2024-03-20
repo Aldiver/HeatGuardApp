@@ -8,6 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+//import androidx.compose.foundation.layout.FlowRowScopeInstance.align
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -24,8 +25,10 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -95,79 +98,122 @@ fun BluetoothScanScreen(
         }
     }
 
-    LazyVerticalStaggeredGrid(
-        columns = StaggeredGridCells.Fixed(2),
-        modifier = Modifier.fillMaxSize(),
-        content = {
-            // Other sensor data cards
-            listOf(
-                SensorData("Heart Rate", R.drawable.electrocardiogram, viewModel.heartRate.toString() ?: "", "bpm"),
-                SensorData("Skin Res", R.drawable.hydrating, viewModel.skinRes ?: "", ""),
-                SensorData("Core Temp", R.drawable.temperature, viewModel.coreTemp.toString() ?: "", "°C"),
-                SensorData("Skin Temp", R.drawable.burn, viewModel.skinTemp.toString() ?: "", "°C"),
-                SensorData("A. Humid", R.drawable.humidity, viewModel.ambientHumidity.toString() ?: "", "%"),
-                SensorData("A. Temperature", R.drawable.temperatures, viewModel.ambientTemperature.toString() ?: "", "°C"),
-            ).forEach { sensorData ->
-                item {
-                    Card(
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        ),
+//    Column(
+//        modifier = Modifier.fillMaxSize(),
+//        verticalArrangement = Arrangement.Top
+//    ) {
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(2),
+            modifier = Modifier.fillMaxWidth(),
+            content = {
+                // Other sensor data cards
+                listOf(
+                    SensorData(
+                        "Heart Rate",
+                        R.drawable.electrocardiogram,
+                        viewModel.heartRate.toString() ?: "",
+                        "bpm"
+                    ),
+                    SensorData("Skin Res", R.drawable.hydrating, viewModel.skinRes ?: "", ""),
+                    SensorData(
+                        "Core Temp",
+                        R.drawable.temperature,
+                        viewModel.coreTemp.toString() ?: "",
+                        "°C"
+                    ),
+                    SensorData(
+                        "Skin Temp",
+                        R.drawable.burn,
+                        viewModel.skinTemp.toString() ?: "",
+                        "°C"
+                    ),
+                    SensorData(
+                        "A. Humid",
+                        R.drawable.humidity,
+                        viewModel.ambientHumidity.toString() ?: "",
+                        "%"
+                    ),
+                    SensorData(
+                        "A. Temperature",
+                        R.drawable.temperatures,
+                        viewModel.ambientTemperature.toString() ?: "",
+                        "°C"
+                    ),
+                ).forEach { sensorData ->
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            ),
 
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.Start,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = sensorData.title,
-                                style = MaterialTheme.typography.labelLarge,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                            Image(
-                                painter = painterResource(id = sensorData.icon),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(60.dp)
-                            )
-                            Text(
-                                text = sensorData.value,
-//                                style = MaterialTheme.typography.bodyLarge,
-                                fontSize = 28.sp,
-                                modifier = Modifier.padding(bottom = 4.dp),
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = sensorData.unit,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
+                            ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.Start,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = sensorData.title,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                Image(
+                                    painter = painterResource(id = sensorData.icon),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                )
+                                Text(
+                                    text = sensorData.value,
+                                    //                                style = MaterialTheme.typography.bodyLarge,
+                                    fontSize = 28.sp,
+                                    modifier = Modifier.padding(bottom = 4.dp),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = sensorData.unit,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            }
                         }
                     }
                 }
             }
-            // Heat stroke message card
-            item {
-                Card(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    )
+        )
+        Card(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxSize(),
+            colors = CardDefaults.cardColors(
+                containerColor = if (viewModel.heatStrokeMessage == 1) Color.Red else Color.Green,
+            ),
+        ) {
+            Button(
+                onClick = { viewModel.detectHeatStroke(context) },
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .fillMaxSize(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                )
+            ){
+                Box(
+                    contentAlignment = Alignment.Center
                 ) {
+
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(50.dp),
+                        color = Color.LightGray
+                    )
                     Text(
-                        text = viewModel.heatStrokeMessage ?: "No data",
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.labelLarge
+                        text = "Start Prediction  "
                     )
                 }
             }
         }
-    )
 }
 

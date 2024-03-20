@@ -50,7 +50,7 @@ class SensorsViewModel @Inject constructor(
 
     var initializingMessage by mutableStateOf<String?>(null)
         private set
-    var heatStrokeMessage by mutableStateOf<String?>("no heatstroke data")
+    var heatStrokeMessage by mutableIntStateOf(0)
         private set
 
     var errorMessage by mutableStateOf<String?>(null)
@@ -72,10 +72,7 @@ class SensorsViewModel @Inject constructor(
     var connectionState by mutableStateOf<ConnectionState>(ConnectionState.Uninitialized)
 
     private fun subscribeToChanges(){
-        Log.d("viewmodel", "subscribe")
         viewModelScope.launch {
-            Log.d("viewmodel", "launch")
-            Log.d("viewmodel", "$sensorResultManager")
             sensorResultManager.data.collect(){
                 result ->
                 Log.d("viewmodel", "collect")
@@ -125,31 +122,41 @@ class SensorsViewModel @Inject constructor(
     }
 
     fun detectHeatStroke(context: Context) {
-        val model = ModelHeatguard.newInstance(context)
-        val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 7), DataType.FLOAT32)
-        var byteBuffer = ByteBuffer.allocate(4 * 7)
+        viewModelScope.launch {
+            val model = ModelHeatguard.newInstance(context)
+            val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 7), DataType.FLOAT32)
+            var byteBuffer = ByteBuffer.allocate(4 * 7)
 
-        val userInfoLiveData = getUserInfo()
-        val userInfo = userInfoLiveData.value
+            val userInfoLiveData = getUserInfo()
+            val userInfo = userInfoLiveData.value
 
-        // Extract age and BMI from user info
-        val ageString = userInfo?.age ?: "0" // Default value if age is null
-        val bmiString = userInfo?.bmi ?: "0" // Default value if BMI is null
-        val age = ageString.toFloatOrNull() ?: 0f // Convert age to int, or use default value if conversion fails
-        val bmi = bmiString.toFloatOrNull() ?: 0f
+            // Extract age and BMI from user info
+            val ageString = userInfo?.age ?: "0" // Default value if age is null
+            val bmiString = userInfo?.bmi ?: "0" // Default value if BMI is null
+            val age = ageString.toFloatOrNull()
+                ?: 0f // Convert age to int, or use default value if conversion fails
+            val bmi = bmiString.toFloatOrNull() ?: 0f
 
-        val inputArray = floatArrayOf(39f, 40.8f, 0.4f, bmi, 166f, age, 0f)
+//            val inputArray = floatArrayOf(39f, 40.8f, 0.4f, bmi, 166f, age, 0f)
+            val inputArray = floatArrayOf(
+                ambientTemperature,
+                coreTemp.toFloat(),
+                (ambientHumidity / 100).toFloat(),
+                bmi,
+                heartRate.toFloat(),
+                age,
+                1f
+            )
+            //ambient temp, coreTemp (body), ambientHumidity (%), bmi, heartRate, skinRes (0/1),
+            inputFeature0.loadArray(inputArray)
+            val outputs = model.process(inputFeature0)
+            val result = outputs.outputFeature0AsTensorBuffer.floatArray[0]
 
-        inputFeature0.loadArray(inputArray)
-        val outputs = model.process(inputFeature0)
-        val result = outputs.outputFeature0AsTensorBuffer.floatArray[0]
+            val final_output = if (result > 0.5) 1 else 0
+            model.close()
 
-        val final_output = if (result > 0.5) 1 else 0
-        model.close()
-
-        heatStrokeMessage = "Prediction: $final_output"
-        // Print the prediction
-//        println(prediction)
+            heatStrokeMessage = final_output
+        }
     }
 
 }
