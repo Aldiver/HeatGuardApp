@@ -21,6 +21,7 @@ import com.example.heatguardapp.data.UserInfoEntity
 import com.example.heatguardapp.ml.ModelHeatguard
 import com.example.heatguardapp.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
@@ -35,21 +36,46 @@ class SensorsViewModel @Inject constructor(
 
     private val userInfoDao: UserInfoDao
 
-    private val db: AppDatabase = Room.databaseBuilder(
-        application.applicationContext,
-        AppDatabase::class.java, "user-info-db"
-    ).build()
+//    private val db: AppDatabase = Room.databaseBuilder(
+//        application.applicationContext,
+//        AppDatabase::class.java, "user-info-db"
+//    ).build()
 
     private val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
     private val inputFeature0: TensorBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 7), DataType.FLOAT32)
 
+    private var age: Float = 0f
+    private var bmi: Float = 0f
+    private var ageCap: Int = 0
+
+
     init {
-        userInfoDao = db.userInfoDao()
+        userInfoDao = Room.databaseBuilder(
+            application.applicationContext,
+            AppDatabase::class.java, "user-info-db"
+        ).build().userInfoDao()
+
+        // Fetch user info and calculate age and BMI
+        val userInfo = getUserInfo().value
+        age = userInfo?.age?.toFloatOrNull() ?: 0f
+        bmi = userInfo?.bmi?.toFloatOrNull() ?: 0f
+        ageCap = 208 - (0.7 * age).toInt()
     }
+//    private fun getUserInfo(): UserInfoEntity? {
+//        return userInfoDao.getUserInfo().asLiveData()
+//    }
 
     private fun getUserInfo(): LiveData<UserInfoEntity?> {
         return userInfoDao.getUserInfo().asLiveData()
     }
+//
+//    val userInfo = getUserInfo().value
+//
+//    // Extract age and BMI from user info
+//    val ageString = userInfo?.age ?: "0" // Default value if age is null
+//    val bmiString = userInfo?.bmi ?: "0" // Default value if BMI is null
+//    val age = ageString.toFloatOrNull() ?: 0f // Convert age to int, or use default value if conversion fails
+//    val bmi = bmiString.toFloatOrNull() ?: 0f
 
     var initializingMessage by mutableStateOf<String?>(null)
         private set
@@ -59,13 +85,11 @@ class SensorsViewModel @Inject constructor(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    var heartRate by mutableIntStateOf(12)
+    var heartRate by mutableIntStateOf(0)
         private set
-    var coreTemp  by mutableIntStateOf(0)
+    var coreTemp  by mutableFloatStateOf(0f)
         private set
-    var skinRes by mutableStateOf<String?>(null)
-        private set
-    var skinTemp  by mutableFloatStateOf(0f)
+    var skinRes by mutableIntStateOf(0)
         private set
     var ambientHumidity by mutableIntStateOf(0)
         private set
@@ -85,13 +109,12 @@ class SensorsViewModel @Inject constructor(
                 when(result){
                     is Resource.Success -> {
                         connectionState = result.data.connectionState
-                        heartRate = result.data.heartRate
-                        coreTemp = result.data.coreTemp
+                        heartRate = minOf(result.data.heartRate, ageCap) //capped HR
+                        coreTemp = result.data.skinTemp + (.7665f * (result.data.skinTemp - result.data.ambientTemperature))
                         skinRes = result.data.skinRes
-                        skinTemp = result.data.skinTemp
                         ambientHumidity = result.data.ambientHumidity
                         ambientTemperature = result.data.ambientTemperature
-                        Log.d("View Model observer checkek", "$heartRate")
+
                         if(togglePrediction){
                             detectHeatStroke()
                         }
@@ -133,22 +156,11 @@ class SensorsViewModel @Inject constructor(
     fun detectHeatStroke() {
 //            val model = ModelHeatguard.newInstance(context)
 //            val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 7), DataType.FLOAT32)
-////            var byteBuffer = ByteBuffer.allocate(4 * 7)
-
-            val userInfoLiveData = getUserInfo()
-            val userInfo = userInfoLiveData.value
-
-            // Extract age and BMI from user info
-            val ageString = userInfo?.age ?: "0" // Default value if age is null
-            val bmiString = userInfo?.bmi ?: "0" // Default value if BMI is null
-            val age = ageString.toFloatOrNull()
-                ?: 0f // Convert age to int, or use default value if conversion fails
-            val bmi = bmiString.toFloatOrNull() ?: 0f
-
+////          var byteBuffer = ByteBuffer.allocate(4 * 7)
 //            val inputArray = floatArrayOf(39f, 40.8f, 0.4f, bmi, 166f, age, 0f)
             val inputArray = floatArrayOf(
                 ambientTemperature,
-                coreTemp.toFloat(),
+                coreTemp,
                 (ambientHumidity / 100).toFloat(),
                 bmi,
                 heartRate.toFloat(),

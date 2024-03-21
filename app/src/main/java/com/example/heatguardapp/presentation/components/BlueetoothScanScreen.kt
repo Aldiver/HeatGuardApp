@@ -98,10 +98,6 @@ fun BluetoothScanScreen(
         }
     }
 
-//    Column(
-//        modifier = Modifier.fillMaxSize(),
-//        verticalArrangement = Arrangement.Top
-//    ) {
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Fixed(2),
             modifier = Modifier.fillMaxWidth(),
@@ -111,32 +107,30 @@ fun BluetoothScanScreen(
                     SensorData(
                         "Heart Rate",
                         R.drawable.electrocardiogram,
-                        viewModel.heartRate.toString() ?: "",
+                        viewModel.heartRate.toString(),
                         "bpm"
                     ),
-                    SensorData("Skin Res", R.drawable.hydrating, viewModel.skinRes ?: "", ""),
+                    SensorData(
+                        "Skin Res",
+                        R.drawable.hydrating,
+                        if (viewModel.skinRes > 0) "High" else "Low",
+                        ""),
                     SensorData(
                         "Core Temp",
                         R.drawable.temperature,
-                        viewModel.coreTemp.toString() ?: "",
-                        "°C"
-                    ),
-                    SensorData(
-                        "Skin Temp",
-                        R.drawable.burn,
-                        viewModel.skinTemp.toString() ?: "",
+                        viewModel.coreTemp.toString(),
                         "°C"
                     ),
                     SensorData(
                         "A. Humid",
                         R.drawable.humidity,
-                        viewModel.ambientHumidity.toString() ?: "",
+                        viewModel.ambientHumidity.toString(),
                         "%"
                     ),
                     SensorData(
                         "A. Temperature",
                         R.drawable.temperatures,
-                        viewModel.ambientTemperature.toString() ?: "",
+                        viewModel.ambientTemperature.toString(),
                         "°C"
                     ),
                 ).forEach { sensorData ->
@@ -168,7 +162,6 @@ fun BluetoothScanScreen(
                                 )
                                 Text(
                                     text = sensorData.value,
-                                    //                                style = MaterialTheme.typography.bodyLarge,
                                     fontSize = 28.sp,
                                     modifier = Modifier.padding(bottom = 4.dp),
                                     color = MaterialTheme.colorScheme.primary

@@ -80,13 +80,12 @@ class SensorsBLEReceiveManager @Inject constructor(
                 } else if(newState == BluetoothProfile.STATE_DISCONNECTED){
                     coroutineScope.launch {
                         data.emit(Resource.Success(data = SensorResult(
-                            0,
-                            0,
-                            "Unknown",
-                            0f,
-                            0,
-                            0f,
-                            ConnectionState.Disconnected
+                            heartRate = 0,
+                            skinTemp = 0f,
+                            skinRes = 0,
+                            ambientHumidity = 0,
+                            ambientTemperature = 0f,
+                            connectionState = ConnectionState.Disconnected
                         )))
                     }
                     gatt.close()
@@ -142,25 +141,20 @@ class SensorsBLEReceiveManager @Inject constructor(
                 when(uuid){
                     UUID.fromString(RASP_SENSOR_CHARACTERISTICS_UUID) -> {
                         val heartRate = value[0].toInt()
-                        val coreTemp = value[1].toInt()
-                        val skinRes = when (value[2].toInt()) {
-                            0 -> "Low"
-                            1 -> "Med"
-                            2 -> "High"
-                            else -> "Unknown"
-                        }
-                        val skinTempMultiplier = if (value[3].toInt() > 0) -1 else 1
-                        val skinTempValue = value[4].toInt() + value[5].toInt() / 10f
+                        val skinRes = if (value[1].toInt() > 0) 1 else 0
+                        val skinTempMultiplier = if (value[2].toInt() > 0) -1 else 1
+                        val skinTempValue = value[3].toInt() + value[4].toInt() / 10f
                         val skinTemp = skinTempMultiplier * skinTempValue
-                        val ambientHumidity = value[6].toInt()
-                        val ambientTempMultiplier = if (value[7].toInt() > 0) -1 else 1
-                        val ambientTempValue = value[8].toInt() + value[9].toInt() / 10f
+                        //get byte value humidity %
+                        val ambientHumidity = value[5].toInt()
+                        //converting byte value to floating point (signed)
+                        val ambientTempMultiplier = if (value[6].toInt() > 0) -1 else 1
+                        val ambientTempValue = value[7].toInt() + value[8].toInt() / 10f
                         val ambientTemperature = ambientTempMultiplier * ambientTempValue
 
                         // Creating and returning the SensorResult object
                         val sensorData = SensorResult(
                             heartRate = heartRate,
-                            coreTemp = coreTemp,
                             skinRes = skinRes,
                             skinTemp = skinTemp,
                             ambientHumidity = ambientHumidity,
