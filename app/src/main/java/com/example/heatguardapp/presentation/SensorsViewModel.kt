@@ -173,7 +173,7 @@ class SensorsViewModel @Inject constructor(
             val result = outputs.outputFeature0AsTensorBuffer.floatArray[0]
 
             val final_output = if (result > 0.5) 1 else 0
-            model.close()
+//            model.close()
 
             heatStrokeMessage = final_output
     }

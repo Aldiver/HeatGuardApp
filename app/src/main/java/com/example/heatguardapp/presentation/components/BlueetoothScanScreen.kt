@@ -118,7 +118,7 @@ fun BluetoothScanScreen(
                     SensorData(
                         "Core Temp",
                         R.drawable.temperature,
-                        viewModel.coreTemp.toString(),
+                        String.format("%.2f", viewModel.coreTemp),
                         "°C"
                     ),
                     SensorData(
@@ -192,7 +192,8 @@ fun BluetoothScanScreen(
                     .fillMaxSize(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
-                )
+                ),
+                enabled = viewModel.connectionState == ConnectionState.Connected
             ){
                 Box(
                     contentAlignment = Alignment.Center
