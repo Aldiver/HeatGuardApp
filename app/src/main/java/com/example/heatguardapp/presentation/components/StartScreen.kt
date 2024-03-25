@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -21,13 +22,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.heatguardapp.R
 import com.example.heatguardapp.data.UserInfoEntity
+import com.example.heatguardapp.data.UserPreferences
+import com.example.heatguardapp.presentation.UserInfoPreferencesViewModel
 import com.example.heatguardapp.presentation.UserInfoViewModel
 
 @Composable
-fun StartScreen(viewModel: UserInfoViewModel, onNextScreen: () -> Unit) {
+fun StartScreen(
+//    viewModel: UserInfoViewModel,
+    onNextScreen: () -> Unit
+) {
+    val viewModel: UserInfoPreferencesViewModel = hiltViewModel()
     var age by remember { mutableStateOf("") }
     var bmi by remember { mutableStateOf("") }
     var isAgeEmpty by remember { mutableStateOf(false) }
@@ -63,6 +72,9 @@ fun StartScreen(viewModel: UserInfoViewModel, onNextScreen: () -> Unit) {
                 isAgeEmpty = it.isBlank() // Update isAgeEmpty when TextField value changes
             },
             label = { Text("Age") },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number // Set keyboard type to Number
+            ),
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -81,13 +93,16 @@ fun StartScreen(viewModel: UserInfoViewModel, onNextScreen: () -> Unit) {
                 isBmiEmpty = it.isBlank() // Update isBmiEmpty when TextField value changes
             },
             label = { Text("BMI") },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number // Set keyboard type to Number
+            ),
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(32.dp))
         Button(
             onClick = {
                 if (age.isNotBlank() && bmi.isNotBlank()) {
-                    viewModel.insertUserInfo(UserInfoEntity(age = age, bmi = bmi))
+                    viewModel.saveUser(age = age, bmi = bmi)
                     onNextScreen()
                 } else {
                     isBmiEmpty = true

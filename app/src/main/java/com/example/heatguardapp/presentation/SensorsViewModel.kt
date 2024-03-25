@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
@@ -20,9 +21,12 @@ import com.example.heatguardapp.data.SensorResultManager
 import com.example.heatguardapp.data.UserInfoEntity
 import com.example.heatguardapp.ml.ModelHeatguard
 import com.example.heatguardapp.utils.Resource
+import com.example.heatguardapp.utils.UserDataPreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import java.nio.ByteBuffer
@@ -31,34 +35,38 @@ import javax.inject.Inject
 @HiltViewModel
 class SensorsViewModel @Inject constructor(
     private val sensorResultManager: SensorResultManager,
+    private val userPreferences: UserDataPreferencesManager,
     application: Application
 ) : ViewModel(){
 
     private val userInfoDao: UserInfoDao
 
-//    private val db: AppDatabase = Room.databaseBuilder(
-//        application.applicationContext,
-//        AppDatabase::class.java, "user-info-db"
-//    ).build()
-
     private val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
-    private val inputFeature0: TensorBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 7), DataType.FLOAT32)
+    private val inputFeature0: TensorBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 8), DataType.FLOAT32)
 
-    private var age: Float = 0f
-    private var bmi: Float = 0f
     private var ageCap: Int = 0
 
-
+//    val age = MutableLiveData<Float>()
+//    val bmi = MutableLiveData<Float>()
+    var age by mutableFloatStateOf(0f)
+        private set
+    var bmi by mutableFloatStateOf(0f)
+        private set
     init {
         userInfoDao = Room.databaseBuilder(
             application.applicationContext,
             AppDatabase::class.java, "user-info-db"
         ).build().userInfoDao()
 
-        // Fetch user info and calculate age and BMI
-        val userInfo = getUserInfo().value
-        age = userInfo?.age?.toFloatOrNull() ?: 0f
-        bmi = userInfo?.bmi?.toFloatOrNull() ?: 0f
+        viewModelScope.launch(Dispatchers.IO) {
+            userPreferences.getUserPreferences().collect { userProfile ->
+                withContext(Dispatchers.Main) {
+                    age = userProfile.age?.toFloatOrNull() ?: 0f
+                    bmi = userProfile.bmi?.toFloatOrNull() ?: 0f
+                }
+            }
+        }
+
         ageCap = 208 - (0.7 * age).toInt()
     }
 //    private fun getUserInfo(): UserInfoEntity? {
@@ -68,14 +76,6 @@ class SensorsViewModel @Inject constructor(
     private fun getUserInfo(): LiveData<UserInfoEntity?> {
         return userInfoDao.getUserInfo().asLiveData()
     }
-//
-//    val userInfo = getUserInfo().value
-//
-//    // Extract age and BMI from user info
-//    val ageString = userInfo?.age ?: "0" // Default value if age is null
-//    val bmiString = userInfo?.bmi ?: "0" // Default value if BMI is null
-//    val age = ageString.toFloatOrNull() ?: 0f // Convert age to int, or use default value if conversion fails
-//    val bmi = bmiString.toFloatOrNull() ?: 0f
 
     var initializingMessage by mutableStateOf<String?>(null)
         private set
@@ -88,6 +88,9 @@ class SensorsViewModel @Inject constructor(
     var heartRate by mutableIntStateOf(0)
         private set
     var coreTemp  by mutableFloatStateOf(0f)
+        private set
+
+    var skinTemp  by mutableFloatStateOf(0f)
         private set
     var skinRes by mutableIntStateOf(0)
         private set
@@ -112,6 +115,7 @@ class SensorsViewModel @Inject constructor(
                         heartRate = minOf(result.data.heartRate, ageCap) //capped HR
                         coreTemp = result.data.skinTemp + (.7665f * (result.data.skinTemp - result.data.ambientTemperature))
                         skinRes = result.data.skinRes
+                        skinTemp = result.data.skinTemp
                         ambientHumidity = result.data.ambientHumidity
                         ambientTemperature = result.data.ambientTemperature
 
@@ -160,6 +164,7 @@ class SensorsViewModel @Inject constructor(
 //            val inputArray = floatArrayOf(39f, 40.8f, 0.4f, bmi, 166f, age, 0f)
             val inputArray = floatArrayOf(
                 ambientTemperature,
+                skinTemp,
                 coreTemp,
                 (ambientHumidity / 100).toFloat(),
                 bmi,

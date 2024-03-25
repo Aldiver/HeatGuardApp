@@ -118,6 +118,9 @@ dependencies {
     //splash
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("org.tensorflow:tensorflow-lite:2.2.0")
+
+    //datastore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }
 
 kapt {

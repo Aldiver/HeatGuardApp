@@ -117,8 +117,14 @@ fun BluetoothScanScreen(
                         ""),
                     SensorData(
                         "Core Temp",
-                        R.drawable.temperature,
+                        R.drawable.core_temp,
                         String.format("%.2f", viewModel.coreTemp),
+                        "°C"
+                    ),
+                    SensorData(
+                        "Skin Temp",
+                        R.drawable.temperature,
+                        String.format("%.2f", viewModel.skinTemp),
                         "°C"
                     ),
                     SensorData(

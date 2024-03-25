@@ -3,8 +3,12 @@ package com.example.heatguardapp.di
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import com.example.heatguardapp.data.SensorResultManager
 import com.example.heatguardapp.data.ble.SensorsBLEReceiveManager
+import com.example.heatguardapp.utils.UserDataPreferencesManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

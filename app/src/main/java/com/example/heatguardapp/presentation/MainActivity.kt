@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
                   onBluetoothStateChanged = {
                       showBluetoothDialog()
                   },
-                    userInfoViewModel = userViewModel
+//                    userInfoViewModel = userViewModel
               )
             }
         }

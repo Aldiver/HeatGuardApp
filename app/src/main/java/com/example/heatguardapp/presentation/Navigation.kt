@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -17,21 +18,20 @@ import com.example.heatguardapp.presentation.components.UserScreen
 @Composable
 fun AppNavigator(
     onBluetoothStateChanged: () -> Unit,
-    userInfoViewModel: UserInfoViewModel
 ) {
     val navController = rememberNavController()
 //    val userViewModel: UserInfoViewModel = viewModel()
+    val userInfoViewModel: UserInfoPreferencesViewModel = hiltViewModel()
+    val age by userInfoViewModel.age.observeAsState()
 
     NavHost(navController = navController, startDestination = Screen.StartScreen.route) {
         composable(Screen.StartScreen.route) {
-            val userInfo = userInfoViewModel.getUserInfo().observeAsState()
 
-            Log.d("Check Data Input","Data is: ${userInfo.value}")
-            if (userInfo.value != null) {
+            if (age != null) {
                 navController.navigate("home_screen")
             } else {
                 StartScreen (
-                    viewModel = userInfoViewModel,
+//                    viewModel = userInfoViewModel,
                     onNextScreen = {navController.navigate(Screen.HomeScreen.route)}
                 )
             }
@@ -40,7 +40,7 @@ fun AppNavigator(
             HomeScreen(navController)
         }
         composable(Screen.UserScreen.route) {
-            UserScreen()
+            UserScreen(navController = navController)
         }
         composable(Screen.StatScreen.route) {
             StatScreen()
