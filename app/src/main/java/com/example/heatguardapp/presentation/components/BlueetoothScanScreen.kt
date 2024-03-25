@@ -191,40 +191,53 @@ fun BluetoothScanScreen(
                 containerColor = if (viewModel.heatStrokeMessage == 1) Color.Red else Color.Green,
             ),
         ) {
-            Button(
-                onClick = { viewModel.togglePrediction() },
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .fillMaxSize(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
-                enabled = viewModel.connectionState == ConnectionState.Connected
-            ){
-                Box(
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (viewModel.togglePrediction) {
-                        if (viewModel.heatStrokeMessage != 1) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(50.dp),
-                                color = Color.LightGray
-                            )
+            if(viewModel.connectionState == ConnectionState.Connected){
+                Button(
+                    onClick = { viewModel.togglePrediction() },
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .fillMaxSize(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent
+                    ),
+                ){
+                    Box(
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (viewModel.togglePrediction) {
+                            if (viewModel.heatStrokeMessage != 1) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(50.dp),
+                                    color = Color.LightGray
+                                )
+                                Text(
+                                    text = "Analyzing Sensor Data"
+                                )
+                            }else{
+                                Text(
+                                    text = "HeatStroke detected"
+                                )
+                            }
+                        } else {
                             Text(
-                                text = "Analyzing Sensor Data"
-                            )
-                        }else{
-                            Text(
-                                text = "HeatStroke detected"
+                                text = "Start Prediction"
                             )
                         }
-                    } else {
-                        Text(
-                            text = "Start Prediction"
-                        )
                     }
                 }
+            }else{
+                Row{
+                    CircularProgressIndicator(
+//                        modifier = Modifier.size(50.dp),
+                        color = Color.LightGray
+                    )
+                    Text(
+                        text = "Connecting to Device..."
+                    )
+
+                }
             }
+
         }
 }
 

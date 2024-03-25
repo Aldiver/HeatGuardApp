@@ -108,7 +108,6 @@ class SensorsViewModel @Inject constructor(
         viewModelScope.launch {
             sensorResultManager.data.collect(){
                 result ->
-                Log.d("viewmodel", "collect")
                 when(result){
                     is Resource.Success -> {
                         connectionState = result.data.connectionState

@@ -52,7 +52,7 @@ class SensorsBLEReceiveManager @Inject constructor(
     private val scanCallback = object : ScanCallback(){
 
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            if(result.device.name == DEVICE_NAME){
+            if (result.device.name == "DEVICE_NAME" || result.device.name == "raspberrypi"){
                 coroutineScope.launch {
                     data.emit(Resource.Loading(message = "Connecting to device..."))
                 }
@@ -105,6 +105,7 @@ class SensorsBLEReceiveManager @Inject constructor(
                 }else{
                     coroutineScope.launch {
                         data.emit(Resource.Error(errorMessage = "Could not connect to ble device"))
+                        Log.d("BLEReceiveManager","Could not connect to ble device")
                     }
                 }
             }
@@ -118,6 +119,15 @@ class SensorsBLEReceiveManager @Inject constructor(
                     data.emit(Resource.Loading(message = "Adjusting MTU space..."))
                 }
                 gatt.requestMtu(517)
+
+                val characteristic = findCharacteristics(RASP_SENSOR_SERVICE_UIID, RASP_SENSOR_CHARACTERISTICS_UUID)
+                if(characteristic == null){
+                    coroutineScope.launch {
+                        data.emit(Resource.Error(errorMessage = "Could not find temp and humidity publisher"))
+                    }
+                    return
+                }
+                enableNotification(characteristic)
             }
         }
 
@@ -187,7 +197,6 @@ class SensorsBLEReceiveManager @Inject constructor(
         characteristic.getDescriptor(cccdUuid)?.let { cccdDescriptor ->
             if(gatt?.setCharacteristicNotification(characteristic, true) == false){
                 Log.d("BLEReceiveManager","set characteristics notification failed")
-                print("this really happend or nah?")
                 return
             }
             writeDescription(cccdDescriptor, payload)
