@@ -52,7 +52,7 @@ class SensorsBLEReceiveManager @Inject constructor(
     private val scanCallback = object : ScanCallback(){
 
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            if(result.device.name == DEVICE_NAME){
+            if(result.device.name == DEVICE_NAME || result.device.name == "raspberrypi"){
                 coroutineScope.launch {
                     data.emit(Resource.Loading(message = "Connecting to device..."))
                 }
@@ -119,6 +119,15 @@ class SensorsBLEReceiveManager @Inject constructor(
                 }
                 gatt.requestMtu(517)
             }
+
+            val characteristic = findCharacteristics(RASP_SENSOR_SERVICE_UIID, RASP_SENSOR_CHARACTERISTICS_UUID)
+            if(characteristic == null){
+                coroutineScope.launch {
+                    data.emit(Resource.Error(errorMessage = "Could not find temp and humidity publisher"))
+                }
+                return
+            }
+            enableNotification(characteristic)
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
