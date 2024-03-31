@@ -32,6 +32,7 @@ class SensorsBLEReceiveManager @Inject constructor(
     private val DEVICE_NAME = "HEATGUARD"
     private val RASP_SENSOR_SERVICE_UIID = "00001811-0000-1000-8000-00805f9b34fb"
     private val RASP_SENSOR_CHARACTERISTICS_UUID = "00000540-0000-1000-8000-00805f9b34fb"
+    private val ALERT_NOTIF_CHARACTERISTICS_UUID = "00002a06-0000-1000-8000-00805f9b34fb"
 
     override val data: MutableSharedFlow<Resource<SensorResult>> = MutableSharedFlow()
 
@@ -52,7 +53,7 @@ class SensorsBLEReceiveManager @Inject constructor(
     private val scanCallback = object : ScanCallback(){
 
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            if (result.device.name == "DEVICE_NAME" || result.device.name == "raspberrypi"){
+            if(result.device.name == DEVICE_NAME || result.device.name == "raspberrypi"){
                 coroutineScope.launch {
                     data.emit(Resource.Loading(message = "Connecting to device..."))
                 }
@@ -105,7 +106,6 @@ class SensorsBLEReceiveManager @Inject constructor(
                 }else{
                     coroutineScope.launch {
                         data.emit(Resource.Error(errorMessage = "Could not connect to ble device"))
-                        Log.d("BLEReceiveManager","Could not connect to ble device")
                     }
                 }
             }
@@ -113,22 +113,21 @@ class SensorsBLEReceiveManager @Inject constructor(
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             with(gatt){
-                Log.d("BLEReceiveManager","onServuce?")
                 printGattTable()
                 coroutineScope.launch {
                     data.emit(Resource.Loading(message = "Adjusting MTU space..."))
                 }
                 gatt.requestMtu(517)
-
-                val characteristic = findCharacteristics(RASP_SENSOR_SERVICE_UIID, RASP_SENSOR_CHARACTERISTICS_UUID)
-                if(characteristic == null){
-                    coroutineScope.launch {
-                        data.emit(Resource.Error(errorMessage = "Could not find temp and humidity publisher"))
-                    }
-                    return
-                }
-                enableNotification(characteristic)
             }
+
+            val characteristic = findCharacteristics(RASP_SENSOR_SERVICE_UIID, RASP_SENSOR_CHARACTERISTICS_UUID)
+            if(characteristic == null){
+                coroutineScope.launch {
+                    data.emit(Resource.Error(errorMessage = "Could not find temp and humidity publisher"))
+                }
+                return
+            }
+            enableNotification(characteristic)
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
@@ -150,7 +149,7 @@ class SensorsBLEReceiveManager @Inject constructor(
             with(characteristic){
                 when(uuid){
                     UUID.fromString(RASP_SENSOR_CHARACTERISTICS_UUID) -> {
-                        val heartRate = value[0].toInt()
+                        val heartRate = value[0].toInt() and 0xFF
                         val skinRes = if (value[1].toInt() > 0) 1 else 0
                         val skinTempMultiplier = if (value[2].toInt() > 0) -1 else 1
                         val skinTempValue = value[3].toInt() + value[4].toInt() / 10f
@@ -184,8 +183,20 @@ class SensorsBLEReceiveManager @Inject constructor(
             }
         }
 
+        override fun onCharacteristicWrite(
+            gatt: BluetoothGatt?,
+            characteristic: BluetoothGattCharacteristic?,
+            status: Int
+        ) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.i("BLE Write", "Characteristic written successfully $characteristic")
+            } else {
+                Log.e("BLE Write", "Characteristic write failed with status: $status")
+            }
+        }
 
     }
+
     private fun enableNotification(characteristic: BluetoothGattCharacteristic){
         val cccdUuid = UUID.fromString(CCCD_DESCRIPTOR_UUID)
         val payload = when {
@@ -197,6 +208,7 @@ class SensorsBLEReceiveManager @Inject constructor(
         characteristic.getDescriptor(cccdUuid)?.let { cccdDescriptor ->
             if(gatt?.setCharacteristicNotification(characteristic, true) == false){
                 Log.d("BLEReceiveManager","set characteristics notification failed")
+                print("this really happend or nah?")
                 return
             }
             writeDescription(cccdDescriptor, payload)
@@ -208,6 +220,25 @@ class SensorsBLEReceiveManager @Inject constructor(
             descriptor.value = payload
             gatt.writeDescriptor(descriptor)
         } ?: error("Not connected to a BLE device!")
+    }
+
+    override fun notifyAlert(status: Int) {
+        val alertCharacteristic = findCharacteristics(RASP_SENSOR_SERVICE_UIID, ALERT_NOTIF_CHARACTERISTICS_UUID)
+
+        // Check if the characteristic was found
+        if (alertCharacteristic != null) {
+            // Write your data to the characteristic here
+            val data = status.toString().toByteArray()
+            Log.e("TAG", "Characteristic found")
+            writeCharacteristic(alertCharacteristic, data)
+        } else {
+            Log.e("TAG", "Characteristic not found")
+        }
+    }
+
+    private fun writeCharacteristic(characteristic: BluetoothGattCharacteristic, value: ByteArray) {
+        characteristic.setValue(value)
+        gatt?.writeCharacteristic(characteristic)
     }
 
     private fun findCharacteristics(serviceUUID: String, characteristicsUUID:String):BluetoothGattCharacteristic?{

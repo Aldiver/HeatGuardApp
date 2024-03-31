@@ -191,53 +191,69 @@ fun BluetoothScanScreen(
                 containerColor = if (viewModel.heatStrokeMessage == 1) Color.Red else Color.Green,
             ),
         ) {
-            if(viewModel.connectionState == ConnectionState.Connected){
-                Button(
-                    onClick = { viewModel.togglePrediction() },
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .fillMaxSize(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                ){
-                    Box(
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (viewModel.togglePrediction) {
-                            if (viewModel.heatStrokeMessage != 1) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(50.dp),
-                                    color = Color.LightGray
-                                )
-                                Text(
-                                    text = "Analyzing Sensor Data"
-                                )
-                            }else{
-                                Text(
-                                    text = "HeatStroke detected"
-                                )
-                            }
-                        } else {
+            Button(
+                onClick = { viewModel.togglePrediction() },
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .fillMaxSize(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+            ){
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+                    when(viewModel.connectionState){
+
+                        ConnectionState.CurrentlyInitializing -> {
                             Text(
-                                text = "Start Prediction"
+                                text = "Connecting to BLE Device"
+                            )
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(50.dp),
+                                color = Color.LightGray
                             )
                         }
+
+                        ConnectionState.Uninitialized ->{
+                            Button(
+                                onClick = { viewModel.reconnect() },
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Transparent
+                                )
+                            ){
+                                    Text(
+                                        text = "BLE Uninitialized: Reconnect Again"
+                                    )
+                                }
+                        }
+
+                        ConnectionState.Connected ->
+                            if (viewModel.togglePrediction) {
+                                if (viewModel.heatStrokeMessage != 1) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(50.dp),
+                                        color = Color.LightGray
+                                    )
+                                    Text(
+                                        text = "Analyzing Sensor Data"
+                                    )
+                                }else{
+                                    Text(
+                                        text = "HeatStroke detected"
+                                    )
+                                }
+                            } else {
+                                Text(
+                                    text = "Start Prediction"
+                                )
+                            }
                     }
-                }
-            }else{
-                Row{
-                    CircularProgressIndicator(
-//                        modifier = Modifier.size(50.dp),
-                        color = Color.LightGray
-                    )
-                    Text(
-                        text = "Connecting to Device..."
-                    )
 
                 }
             }
-
         }
 }
 
