@@ -1,7 +1,6 @@
 package com.example.heatguardapp.presentation
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -9,7 +8,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
@@ -24,12 +22,10 @@ import com.example.heatguardapp.utils.Resource
 import com.example.heatguardapp.utils.UserDataPreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import java.nio.ByteBuffer
 import javax.inject.Inject
 
 @HiltViewModel
@@ -143,6 +139,7 @@ class SensorsViewModel @Inject constructor(
     }
 
     fun reconnect(){
+        sensorResultManager.disconnect()
         sensorResultManager.reconnect()
     }
 
@@ -152,35 +149,39 @@ class SensorsViewModel @Inject constructor(
         sensorResultManager.startReceiving()
     }
 
+    private fun notifyAlert(value: Int){
+//        if(heatStrokeMessage != value){
+            sensorResultManager.notifyAlert(value)
+        Log.d("Notify Alert:", "$value")
+//        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         sensorResultManager.closeConnection()
     }
 
-    fun detectHeatStroke() {
-//            val model = ModelHeatguard.newInstance(context)
-//            val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 7), DataType.FLOAT32)
-////          var byteBuffer = ByteBuffer.allocate(4 * 7)
-//            val inputArray = floatArrayOf(39f, 40.8f, 0.4f, bmi, 166f, age, 0f)
-            val inputArray = floatArrayOf(
-                ambientTemperature,
-                skinTemp,
-                coreTemp,
-                (ambientHumidity / 100).toFloat(),
-                bmi,
-                heartRate.toFloat(),
-                age,
-                1f
-            )
+    private fun detectHeatStroke() {
+            val inputArray = floatArrayOf(39f, 40.8f, 40.8f, 0.4f, 24f, 166f, 38f, 0f) // testing heatstroke
+        // use below to use actual sensor readings
+//            val inputArray = floatArrayOf(
+//                ambientTemperature,
+//                skinTemp,
+//                coreTemp,
+//                (ambientHumidity / 100).toFloat(),
+//                bmi,
+//                heartRate.toFloat(),
+//                age,
+//                1f
+//            )
             //ambient temp, coreTemp (body), ambientHumidity (%), bmi, heartRate, skinRes (0/1),
             inputFeature0.loadArray(inputArray)
             val outputs = model.process(inputFeature0)
             val result = outputs.outputFeature0AsTensorBuffer.floatArray[0]
 
-            val final_output = if (result > 0.5) 1 else 0
-//            model.close()
-
-            heatStrokeMessage = final_output
+            val finalOutput = if (result > 0.5) 1 else 0
+            notifyAlert(finalOutput)
+            heatStrokeMessage = finalOutput
     }
 
     fun togglePrediction() {

@@ -10,4 +10,5 @@ interface SensorResultManager {
     fun disconnect()
     fun closeConnection()
     fun startReceiving()
+    fun notifyAlert(status: Int)
 }
