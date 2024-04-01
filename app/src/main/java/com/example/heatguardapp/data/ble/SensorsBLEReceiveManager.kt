@@ -117,13 +117,13 @@ class SensorsBLEReceiveManager @Inject constructor(
                 coroutineScope.launch {
                     data.emit(Resource.Loading(message = "Adjusting MTU space..."))
                 }
-                gatt.requestMtu(517)
+//                gatt.requestMtu(517)
             }
 
             val characteristic = findCharacteristics(RASP_SENSOR_SERVICE_UIID, RASP_SENSOR_CHARACTERISTICS_UUID)
             if(characteristic == null){
                 coroutineScope.launch {
-                    data.emit(Resource.Error(errorMessage = "Could not find temp and humidity publisher"))
+                    data.emit(Resource.Error(errorMessage = "Could not find HeatGuard publisher"))
                 }
                 return
             }
@@ -134,7 +134,7 @@ class SensorsBLEReceiveManager @Inject constructor(
             val characteristic = findCharacteristics(RASP_SENSOR_SERVICE_UIID, RASP_SENSOR_CHARACTERISTICS_UUID)
             if(characteristic == null){
                 coroutineScope.launch {
-                    data.emit(Resource.Error(errorMessage = "Could not find temp and humidity publisher"))
+                    data.emit(Resource.Error(errorMessage = "Could not find heatguard publisher"))
                 }
                 return
             }
