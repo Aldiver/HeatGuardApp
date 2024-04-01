@@ -11,9 +11,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import androidx.room.Room
-import com.example.heatguardapp.dao.AppDatabase
-import com.example.heatguardapp.dao.UserInfoDao
 import com.example.heatguardapp.data.ConnectionState
 import com.example.heatguardapp.data.SensorResultManager
 import com.example.heatguardapp.data.UserInfoEntity
@@ -35,8 +32,6 @@ class SensorsViewModel @Inject constructor(
     application: Application
 ) : ViewModel(){
 
-    private val userInfoDao: UserInfoDao
-
     private val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
     private val inputFeature0: TensorBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 8), DataType.FLOAT32)
 
@@ -49,11 +44,6 @@ class SensorsViewModel @Inject constructor(
     var bmi by mutableFloatStateOf(0f)
         private set
     init {
-        userInfoDao = Room.databaseBuilder(
-            application.applicationContext,
-            AppDatabase::class.java, "user-info-db"
-        ).build().userInfoDao()
-
         viewModelScope.launch(Dispatchers.IO) {
             userPreferences.getUserPreferences().collect { userProfile ->
                 withContext(Dispatchers.Main) {
@@ -64,13 +54,6 @@ class SensorsViewModel @Inject constructor(
         }
 
         ageCap = 208 - (0.7 * age).toInt()
-    }
-//    private fun getUserInfo(): UserInfoEntity? {
-//        return userInfoDao.getUserInfo().asLiveData()
-//    }
-
-    private fun getUserInfo(): LiveData<UserInfoEntity?> {
-        return userInfoDao.getUserInfo().asLiveData()
     }
 
     var initializingMessage by mutableStateOf<String?>(null)
@@ -104,6 +87,7 @@ class SensorsViewModel @Inject constructor(
         viewModelScope.launch {
             sensorResultManager.data.collect(){
                 result ->
+                Log.d("viewmodel", "collect $result")
                 when(result){
                     is Resource.Success -> {
                         connectionState = result.data.connectionState
