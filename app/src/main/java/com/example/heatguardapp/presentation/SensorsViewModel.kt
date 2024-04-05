@@ -145,8 +145,9 @@ class SensorsViewModel @Inject constructor(
     }
 
     private fun detectHeatStroke() {
-            val inputArray = floatArrayOf(39f, 40.8f, 40.8f, 0.4f, 24f, 166f, 38f, 0f) // testing heatstroke
-        // use below to use actual sensor readings
+//        ,,,0.1,,,,1
+            val inputArray = floatArrayOf(37.7f, 37.15631672f, 39.43051572f, 0.1f, 20.88450016f, 85f, 23f, 1f) // testing heatstroke
+//         use below to use actual sensor readings
 //            val inputArray = floatArrayOf(
 //                ambientTemperature,
 //                skinTemp,
