@@ -35,13 +35,14 @@ class SensorsViewModel @Inject constructor(
     private val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
     private val inputFeature0: TensorBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 8), DataType.FLOAT32)
 
-    private var ageCap: Int = 0
-
 //    val age = MutableLiveData<Float>()
 //    val bmi = MutableLiveData<Float>()
     var age by mutableFloatStateOf(0f)
         private set
     var bmi by mutableFloatStateOf(0f)
+        private set
+
+    var ageCap by mutableIntStateOf(208 - (0.7 * age).toInt())
         private set
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -53,7 +54,7 @@ class SensorsViewModel @Inject constructor(
             }
         }
 
-        ageCap = 208 - (0.7 * age).toInt()
+//        ageCap = 208 - ((0.7 * age).toInt())
     }
 
     var initializingMessage by mutableStateOf<String?>(null)
@@ -92,6 +93,7 @@ class SensorsViewModel @Inject constructor(
                     is Resource.Success -> {
                         connectionState = result.data.connectionState
                         heartRate = minOf(result.data.heartRate, ageCap) //capped HR
+                        Log.d("Age Cap2", "Value: $ageCap")
                         coreTemp = result.data.skinTemp + (.7665f * (result.data.skinTemp - result.data.ambientTemperature))
                         skinRes = result.data.skinRes
                         skinTemp = result.data.skinTemp
