@@ -42,14 +42,16 @@ class SensorsViewModel @Inject constructor(
     var bmi by mutableFloatStateOf(0f)
         private set
 
-    var ageCap by mutableIntStateOf(208 - (0.7 * age).toInt())
-        private set
+    private var ageCap: Int = 0
     init {
         viewModelScope.launch(Dispatchers.IO) {
             userPreferences.getUserPreferences().collect { userProfile ->
                 withContext(Dispatchers.Main) {
                     age = userProfile.age?.toFloatOrNull() ?: 0f
                     bmi = userProfile.bmi?.toFloatOrNull() ?: 0f
+
+                    ageCap = 208 - (0.7 * age).toInt()
+                    Log.d("SensorInit", "agecap value: $ageCap")
                 }
             }
         }

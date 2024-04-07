@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heatguardapp.utils.UserDataPreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -32,8 +34,8 @@ class UserInfoPreferencesViewModel @Inject constructor(
         }
     }
 
-    fun deleteUser() {
-        viewModelScope.launch(Dispatchers.IO) {
+    suspend fun deleteUser(): Deferred<Unit> {
+        return viewModelScope.async {
             userPreferences.clearAll()
         }
     }

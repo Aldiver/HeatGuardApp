@@ -126,8 +126,7 @@ fun UserScreen(
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        viewModel.deleteUser()
-//                        delay(1000)
+                        viewModel.deleteUser().await()
                         navController.navigate("start_screen")
                     }
                 },
