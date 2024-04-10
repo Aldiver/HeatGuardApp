@@ -65,11 +65,14 @@ fun StartScreen(
                 modifier = Modifier.padding(bottom = 4.dp)
             )
         }
+        // Age TextField
         TextField(
             value = age,
-            onValueChange = {
-                age = it
-                isAgeEmpty = it.isBlank() // Update isAgeEmpty when TextField value changes
+            onValueChange = { newValue ->
+                if (newValue.isBlank() || newValue.toIntOrNull() != null) {
+                    age = newValue
+                    isAgeEmpty = newValue.isBlank()
+                }
             },
             label = { Text("Age") },
             keyboardOptions = KeyboardOptions.Default.copy(
@@ -86,11 +89,14 @@ fun StartScreen(
                 modifier = Modifier.padding(bottom = 4.dp)
             )
         }
+        // BMI TextField
         TextField(
             value = bmi,
-            onValueChange = {
-                bmi = it
-                isBmiEmpty = it.isBlank() // Update isBmiEmpty when TextField value changes
+            onValueChange = { newValue ->
+                if (newValue.isBlank() || newValue.toFloatOrNull() != null) {
+                    bmi = newValue
+                    isBmiEmpty = newValue.isBlank()
+                }
             },
             label = { Text("BMI") },
             keyboardOptions = KeyboardOptions.Default.copy(

@@ -12,7 +12,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.heatguardapp.presentation.components.BluetoothScanScreen
 import com.example.heatguardapp.presentation.components.HomeScreen
 import com.example.heatguardapp.presentation.components.StartScreen
-import com.example.heatguardapp.presentation.components.StatScreen
 import com.example.heatguardapp.presentation.components.UserScreen
 
 @Composable
@@ -41,9 +40,6 @@ fun AppNavigator(
         }
         composable(Screen.UserScreen.route) {
             UserScreen(navController = navController)
-        }
-        composable(Screen.StatScreen.route) {
-            StatScreen()
         }
     }
 }
