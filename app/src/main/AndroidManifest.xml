@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
@@ -10,6 +11,7 @@
     <uses-feature android:name="android.hardware.bluetooth" />
 
     <application
+        android:usesCleartextTraffic="true"
         android:name=".BluetoothApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"

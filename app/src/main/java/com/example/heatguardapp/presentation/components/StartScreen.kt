@@ -26,10 +26,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.heatguardapp.R
-import com.example.heatguardapp.data.UserInfoEntity
-import com.example.heatguardapp.data.UserPreferences
-import com.example.heatguardapp.presentation.UserInfoPreferencesViewModel
-import com.example.heatguardapp.presentation.UserInfoViewModel
+import com.example.heatguardapp.presentation.viewmodel.UserInfoPreferencesViewModel
 
 @Composable
 fun StartScreen(

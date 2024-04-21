@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -35,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.heatguardapp.R
-import com.example.heatguardapp.presentation.UserInfoPreferencesViewModel
+import com.example.heatguardapp.presentation.viewmodel.UserInfoPreferencesViewModel
 import kotlinx.coroutines.launch
 
 @Composable

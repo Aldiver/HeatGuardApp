@@ -1,4 +1,4 @@
-package com.example.heatguardapp.presentation
+package com.example.heatguardapp.presentation.viewmodel
 
 import android.app.Application
 import android.util.Log
@@ -7,13 +7,10 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.heatguardapp.data.ConnectionState
 import com.example.heatguardapp.data.SensorResultManager
-import com.example.heatguardapp.data.UserInfoEntity
 import com.example.heatguardapp.ml.ModelHeatguard
 import com.example.heatguardapp.utils.Resource
 import com.example.heatguardapp.utils.UserDataPreferencesManager
@@ -29,7 +26,7 @@ import javax.inject.Inject
 class SensorsViewModel @Inject constructor(
     private val sensorResultManager: SensorResultManager,
     private val userPreferences: UserDataPreferencesManager,
-    application: Application
+    private val application: Application
 ) : ViewModel(){
 
     private val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
@@ -95,7 +92,6 @@ class SensorsViewModel @Inject constructor(
                     is Resource.Success -> {
                         connectionState = result.data.connectionState
                         heartRate = minOf(result.data.heartRate, ageCap) //capped HR
-                        Log.d("Age Cap2", "Value: $ageCap")
                         coreTemp = result.data.skinTemp + (.7665f * (result.data.skinTemp - result.data.ambientTemperature))
                         skinRes = result.data.skinRes
                         skinTemp = result.data.skinTemp
@@ -149,6 +145,7 @@ class SensorsViewModel @Inject constructor(
     }
 
     private fun detectHeatStroke() {
+        val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
 //        ,,,0.1,,,,1
 //            val inputArray = floatArrayOf(37.7f, 37.15631672f, 39.43051572f, 0.1f, 20.88450016f, 85f, 23f, 1f) // testing heatstroke
 //         use below to use actual sensor readings
@@ -160,7 +157,7 @@ class SensorsViewModel @Inject constructor(
                 bmi,
                 heartRate.toFloat(),
                 age,
-                1f
+                skinRes.toFloat()
             )
             //ambient temp, coreTemp (body), ambientHumidity (%), bmi, heartRate, skinRes (0/1),
             inputFeature0.loadArray(inputArray)

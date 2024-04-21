@@ -45,6 +45,15 @@ fun HomeScreen(
              )
 
              Image(
+                 painter = painterResource(id = R.drawable.stat),
+                 contentDescription = "",
+                 modifier = Modifier
+                     .clickable {
+                         navController.navigate("stat_screen")
+                     }
+             )
+
+             Image(
                  painter = painterResource(id = R.drawable.heatguard_logo),
                  contentDescription = "",
                  modifier = Modifier

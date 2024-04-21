@@ -1,18 +1,17 @@
 package com.example.heatguardapp.presentation
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.heatguardapp.presentation.components.BluetoothScanScreen
 import com.example.heatguardapp.presentation.components.HomeScreen
 import com.example.heatguardapp.presentation.components.StartScreen
+import com.example.heatguardapp.presentation.components.StatScreen
 import com.example.heatguardapp.presentation.components.UserScreen
+import com.example.heatguardapp.presentation.viewmodel.UserInfoPreferencesViewModel
 
 @Composable
 fun AppNavigator(
@@ -40,6 +39,10 @@ fun AppNavigator(
         }
         composable(Screen.UserScreen.route) {
             UserScreen(navController = navController)
+        }
+
+        composable(Screen.StatScreen.route) {
+            StatScreen(navController = navController)
         }
     }
 }

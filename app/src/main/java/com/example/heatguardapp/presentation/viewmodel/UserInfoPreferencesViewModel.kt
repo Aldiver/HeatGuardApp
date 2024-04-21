@@ -1,4 +1,4 @@
-package com.example.heatguardapp.presentation
+package com.example.heatguardapp.presentation.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel

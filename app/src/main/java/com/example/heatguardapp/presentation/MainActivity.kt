@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.heatguardapp.presentation.viewmodel.UserInfoViewModel
 import com.example.heatguardapp.ui.theme.HeatGuardTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

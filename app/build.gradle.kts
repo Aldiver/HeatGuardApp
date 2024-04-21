@@ -117,10 +117,21 @@ dependencies {
 
     //splash
     implementation("androidx.core:core-splashscreen:1.0.1")
-    implementation("org.tensorflow:tensorflow-lite:2.2.0")
+    implementation("org.tensorflow:tensorflow-lite:2.4.0")
 
     //datastore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    //okHttp
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+    // Retrofit for network requests
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // Coroutines for asynchronous programming
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 }
 
 kapt {

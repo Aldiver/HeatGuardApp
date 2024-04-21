@@ -6,6 +6,8 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.heatguardapp.api.repository.UpdateModelRepository
+import com.example.heatguardapp.api.service.UpdateModelService
 import com.example.heatguardapp.data.SensorResultManager
 import com.example.heatguardapp.data.ble.SensorsBLEReceiveManager
 import com.example.heatguardapp.utils.UserDataPreferencesManager
@@ -35,4 +37,7 @@ object AppModule {
     ) : SensorResultManager{
         return SensorsBLEReceiveManager(bluetoothAdapter, context)
     }
+
+    @Provides
+    fun provideUpdateModelRepository(updateModelService: UpdateModelService) = UpdateModelRepository(updateModelService)
 }
