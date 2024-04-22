@@ -9,5 +9,5 @@ data class UserInfoApi(
     val heartRate: Float = 0f,
     val age: Float = 0f,
     val skinRes: Float = 0f,
-    val heatstroke: Float = 0f
+    val heatstroke: Float? = 0f
 )

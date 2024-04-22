@@ -7,11 +7,16 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.heatguardapp.api.models.UserInfoApi
 import com.example.heatguardapp.data.ConnectionState
 import com.example.heatguardapp.data.SensorResultManager
+import com.example.heatguardapp.data.UserInfoEntity
 import com.example.heatguardapp.ml.ModelHeatguard
+import com.example.heatguardapp.repository.UserRepository
+import com.example.heatguardapp.utils.KDTree
 import com.example.heatguardapp.utils.Resource
 import com.example.heatguardapp.utils.UserDataPreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,20 +31,26 @@ import javax.inject.Inject
 class SensorsViewModel @Inject constructor(
     private val sensorResultManager: SensorResultManager,
     private val userPreferences: UserDataPreferencesManager,
+    private val userRepository: UserRepository,
     private val application: Application
 ) : ViewModel(){
 
     private val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
     private val inputFeature0: TensorBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 8), DataType.FLOAT32)
 
-//    val age = MutableLiveData<Float>()
-//    val bmi = MutableLiveData<Float>()
+    private val userInfoApiList = mutableListOf<UserInfoApi>()
+
+    private fun getUserInfo(): List<UserInfoEntity> {
+        return userRepository.getUserInfo()
+    }
+
     var age by mutableFloatStateOf(0f)
         private set
     var bmi by mutableFloatStateOf(0f)
         private set
 
     private var ageCap: Int = 0
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             userPreferences.getUserPreferences().collect { userProfile ->
@@ -51,13 +62,29 @@ class SensorsViewModel @Inject constructor(
                     Log.d("SensorInit", "agecap value: $ageCap")
                 }
             }
-        }
 
-//        ageCap = 208 - ((0.7 * age).toInt())
+            val userInfoList = getUserInfo()
+
+            // Convert UserInfoEntity objects to UserInfoApi
+            for (userInfoEntity in userInfoList) {
+                val userInfoApi = UserInfoApi(
+                    ambientTemp = userInfoEntity.ambientTemp,
+                    skinTemp = userInfoEntity.skinTemp,
+                    coreTemp = userInfoEntity.coreTemp,
+                    ambientHumidity = userInfoEntity.ambientHumidity,
+                    bmi = userInfoEntity.bmi,
+                    heartRate = userInfoEntity.heartRate,
+                    age = userInfoEntity.age,
+                    skinRes = userInfoEntity.skinRes
+                )
+                userInfoApiList.add(userInfoApi)
+            }
+        }
     }
 
     var initializingMessage by mutableStateOf<String?>(null)
         private set
+
     var heatStrokeMessage by mutableIntStateOf(0)
         private set
 
@@ -66,15 +93,19 @@ class SensorsViewModel @Inject constructor(
 
     var heartRate by mutableIntStateOf(0)
         private set
+
     var coreTemp  by mutableFloatStateOf(0f)
         private set
 
     var skinTemp  by mutableFloatStateOf(0f)
         private set
+
     var skinRes by mutableIntStateOf(0)
         private set
+
     var ambientHumidity by mutableIntStateOf(0)
         private set
+
     var ambientTemperature  by mutableFloatStateOf(0f)
         private set
 
@@ -98,8 +129,26 @@ class SensorsViewModel @Inject constructor(
                         ambientHumidity = result.data.ambientHumidity
                         ambientTemperature = result.data.ambientTemperature
 
+                        val kdTree = KDTree(userInfoApiList)
+                        val root = kdTree.buildTree()
+
+                        val currValue = UserInfoApi(
+                            ambientTemperature,
+                            skinTemp,
+                            coreTemp,
+                            (ambientHumidity / 100).toFloat(),
+                            bmi,
+                            heartRate.toFloat(),
+                            age,
+                            skinRes.toFloat(),
+                            0.0f
+                        )
+                        val nearestNeighbor = kdTree.findNearestNeighbor(currValue)
+
                         if(togglePrediction){
-                            detectHeatStroke()
+                            if (nearestNeighbor != null) {
+                                heatStrokeMessage = nearestNeighbor.heatstroke?.toInt() ?: detectHeatStroke()
+                            }
                         }
                     }
 
@@ -144,8 +193,8 @@ class SensorsViewModel @Inject constructor(
         sensorResultManager.closeConnection()
     }
 
-    private fun detectHeatStroke() {
-        val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
+    private fun detectHeatStroke(): Int {
+//        val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
 //        ,,,0.1,,,,1
 //            val inputArray = floatArrayOf(37.7f, 37.15631672f, 39.43051572f, 0.1f, 20.88450016f, 85f, 23f, 1f) // testing heatstroke
 //         use below to use actual sensor readings
@@ -166,7 +215,8 @@ class SensorsViewModel @Inject constructor(
 
             val finalOutput = if (result > 0.5) 1 else 0
             notifyAlert(finalOutput)
-            heatStrokeMessage = finalOutput
+//            heatStrokeMessage = finalOutput
+            return finalOutput
     }
 
     fun togglePrediction() {

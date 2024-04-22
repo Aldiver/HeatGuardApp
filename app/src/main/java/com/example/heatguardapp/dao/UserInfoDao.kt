@@ -13,11 +13,14 @@ interface UserInfoDao {
     suspend fun insert(userInfo: UserInfoEntity)
 
     @Query("SELECT * FROM user_info")
-    fun getUserInfo(): LiveData<List<UserInfoEntity>>
+    fun getUserInfoLive(): LiveData<List<UserInfoEntity>>
 
     @Delete
     suspend fun delete(userInfo: UserInfoEntity) // Added delete method
 
     @Query("DELETE FROM user_info") // Add delete all method
     suspend fun deleteAllUsers()
+
+    @Query("SELECT * FROM user_info")
+    fun getUserInfo(): List<UserInfoEntity>
 }

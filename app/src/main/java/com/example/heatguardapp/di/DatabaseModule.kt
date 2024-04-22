@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.heatguardapp.dao.AppDatabase
 import com.example.heatguardapp.dao.UserInfoDao
+import com.example.heatguardapp.repository.UserRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,5 +29,10 @@ object DatabaseModule {
     @Provides
     fun provideUserInfoDao(database: AppDatabase): UserInfoDao {
         return database.userInfoDao()
+    }
+
+    @Provides
+    fun provideUserRepository(userInfoDao: UserInfoDao): UserRepository {
+        return UserRepository(userInfoDao)
     }
 }

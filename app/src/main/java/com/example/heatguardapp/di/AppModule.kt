@@ -40,4 +40,5 @@ object AppModule {
 
     @Provides
     fun provideUpdateModelRepository(updateModelService: UpdateModelService) = UpdateModelRepository(updateModelService)
+
 }

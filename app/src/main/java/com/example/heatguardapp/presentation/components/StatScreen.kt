@@ -45,7 +45,7 @@ fun StatScreen(
     viewModel: UserInfoViewModel = hiltViewModel(),
     updateViewModel: UpdateDataViewModel = hiltViewModel()
 ) {
-    val userInfoList by viewModel.getUserInfo().observeAsState(initial = emptyList())
+    val userInfoList by viewModel.getUserInfoLive().observeAsState(initial = emptyList())
 
 
     val updateStatus by
