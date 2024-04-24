@@ -1,12 +1,13 @@
 package com.example.heatguardapp.presentation.components
 
-import android.util.Log
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-//import androidx.compose.foundation.layout.FlowRowScopeInstance.align
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,16 +45,18 @@ import com.example.heatguardapp.presentation.permissions.PermissionUtils
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
+@SuppressLint("RememberReturnType")
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun BluetoothScanScreen(
     viewModel: SensorsViewModel = hiltViewModel(),
     userInfoViewModel: UserInfoViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
     val permissionState = rememberMultiplePermissionsState(permissions = PermissionUtils.permissions)
     val lifecycleOwner = LocalLifecycleOwner.current
     val bleConnectionState = viewModel.connectionState
+    val loadingMessage = viewModel.initializingMessage
+    val errorMessage = viewModel.errorMessage
 
     DisposableEffect(
         key1 = lifecycleOwner,
@@ -81,97 +85,171 @@ fun BluetoothScanScreen(
     LaunchedEffect(key1 = permissionState.allPermissionsGranted) {
         if (permissionState.allPermissionsGranted) {
             if (bleConnectionState == ConnectionState.Uninitialized) {
-                Log.d("View Model observer checked", "Initialize connection call")
                 viewModel.initializeConnection()
             }
         }
     }
 
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Fixed(2),
-            modifier = Modifier.fillMaxWidth(),
-            content = {
-                // Other sensor data cards
-                listOf(
-                    SensorData(
-                        "Heart Rate",
-                        R.drawable.electrocardiogram,
-                        viewModel.heartRate.toString(),
-                        "bpm"
-                    ),
-                    SensorData(
-                        "Skin Res",
-                        R.drawable.hydrating,
-                        if (viewModel.skinRes > 0) "High" else "Low",
-                        ""),
-                    SensorData(
-                        "Core Temp",
-                        R.drawable.core_temp,
-                        String.format("%.2f", viewModel.coreTemp),
-                        "°C"
-                    ),
-                    SensorData(
-                        "Skin Temp",
-                        R.drawable.temperature,
-                        String.format("%.2f", viewModel.skinTemp),
-                        "°C"
-                    ),
-                    SensorData(
-                        "A. Humid",
-                        R.drawable.humidity,
-                        viewModel.ambientHumidity.toString(),
-                        "%"
-                    ),
-                    SensorData(
-                        "A. Temperature",
-                        R.drawable.temperatures,
-                        viewModel.ambientTemperature.toString(),
-                        "°C"
-                    ),
-                ).forEach { sensorData ->
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            ),
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Box(
+            modifier = Modifier.weight(0.9f)
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        ){
+            LazyVerticalStaggeredGrid(
+                columns = StaggeredGridCells.Fixed(2),
+                modifier = Modifier
+                    .fillMaxWidth(),
+                content = {
+                    // Other sensor data cards
+                    listOf(
+                        SensorData(
+                            "Heart Rate",
+                            R.drawable.electrocardiogram,
+                            viewModel.heartRate.toString(),
+                            "bpm"
+                        ),
+                        SensorData(
+                            "Skin Res",
+                            R.drawable.hydrating,
+                            if (viewModel.skinRes > 0) "High" else "Low",
+                            ""),
+                        SensorData(
+                            "Core Temp",
+                            R.drawable.core_temp,
+                            String.format("%.2f", viewModel.coreTemp),
+                            "°C"
+                        ),
+                        SensorData(
+                            "Skin Temp",
+                            R.drawable.temperature,
+                            String.format("%.2f", viewModel.skinTemp),
+                            "°C"
+                        ),
+                        SensorData(
+                            "A. Humid",
+                            R.drawable.humidity,
+                            viewModel.ambientHumidity.toString(),
+                            "%"
+                        ),
+                        SensorData(
+                            "A. Temperature",
+                            R.drawable.temperatures,
+                            viewModel.ambientTemperature.toString(),
+                            "°C"
+                        ),
+                    ).forEach { sensorData ->
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                ),
 
-                            ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.Start,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = sensorData.title,
-                                    style = MaterialTheme.typography.labelLarge,
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                )
-                                Image(
-                                    painter = painterResource(id = sensorData.icon),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(60.dp)
-                                )
-                                Text(
-                                    text = sensorData.value,
-                                    fontSize = 28.sp,
-                                    modifier = Modifier.padding(bottom = 4.dp),
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    text = sensorData.unit,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
+                                ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    horizontalAlignment = Alignment.Start,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = sensorData.title,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+                                    Image(
+                                        painter = painterResource(id = sensorData.icon),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(60.dp)
+                                    )
+                                    Text(
+                                        text = sensorData.value,
+                                        fontSize = 28.sp,
+                                        modifier = Modifier.padding(bottom = 4.dp),
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = sensorData.unit,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                }
                             }
                         }
                     }
                 }
+            )
+            if(bleConnectionState == ConnectionState.CurrentlyInitializing){
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.background(Color.Black.copy(alpha = .5f))
+                        .fillMaxSize()
+                ){
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(100.dp),
+                        color = Color.LightGray
+                    )
+                }
             }
-        )
+        }
+        Row(
+            modifier = Modifier.fillMaxSize()
+                .weight(.1f)
+        ) {
+            when(bleConnectionState){
+                ConnectionState.CurrentlyInitializing -> {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp),
+                        text ="$loadingMessage",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+
+                ConnectionState.Uninitialized -> {
+                    Button(
+                        onClick = { viewModel.initializeConnection() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent
+                        )
+                    ){
+                        Text(
+                            text = "BLE Uninitialized: Reconnect Again"
+                        )
+                    }
+                }
+
+                ConnectionState.Connected -> {
+
+                }
+
+                ConnectionState.Disconnected -> {
+                    Button(
+                        onClick = { viewModel.reconnect() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent
+                        )
+                    ){
+                        Text(
+                            text = "BLE Uninitialized: Reconnect Again"
+                        )
+                    }
+                }
+            }
+
+        }
+    }
+
+
+
+
         Row(
             modifier = Modifier.fillMaxWidth()
         ){
@@ -189,7 +267,7 @@ fun BluetoothScanScreen(
                     ) {
                         when(viewModel.connectionState){
 
-                            ConnectionState.Connected -> {
+                            ConnectionState.CurrentlyInitializing -> {
                                 Text(
                                     text = "Connecting to BLE Device"
                                 )
@@ -201,8 +279,7 @@ fun BluetoothScanScreen(
 
                             ConnectionState.Uninitialized ->{
                                 Button(
-                                    onClick = { viewModel.reconnect() },
-//                                    modifier = Modifier
+                                    onClick = { viewModel.initializeConnection() },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Color.Transparent
                                     )
@@ -213,7 +290,7 @@ fun BluetoothScanScreen(
                                 }
                             }
 
-                            ConnectionState.CurrentlyInitializing ->
+                            ConnectionState.Connected ->
                                 Button(
                                     onClick = { viewModel.togglePrediction() },
                                     colors = ButtonDefaults.buttonColors(
@@ -256,7 +333,7 @@ fun BluetoothScanScreen(
                         heartRate = viewModel.heartRate.toFloat(),
                         age = viewModel.age,
                         skinRes = viewModel.skinRes.toFloat(),
-                        heatstroke = 0f
+                        heatstroke = if (viewModel.heatStrokeMessage == 0) 1f else 0f
                     )
 
                     userInfoViewModel.insertUserInfo(userInfo)

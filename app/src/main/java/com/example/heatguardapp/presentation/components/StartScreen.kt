@@ -30,7 +30,6 @@ import com.example.heatguardapp.presentation.viewmodel.UserInfoPreferencesViewMo
 
 @Composable
 fun StartScreen(
-//    viewModel: UserInfoViewModel,
     onNextScreen: () -> Unit
 ) {
     val viewModel: UserInfoPreferencesViewModel = hiltViewModel()
@@ -75,6 +74,7 @@ fun StartScreen(
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Number // Set keyboard type to Number
             ),
+            singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -99,7 +99,8 @@ fun StartScreen(
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Number // Set keyboard type to Number
             ),
-            modifier = Modifier.fillMaxWidth()
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(32.dp))
         Button(

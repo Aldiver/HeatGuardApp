@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.heatguardapp.api.models.UserInfoApi
@@ -16,9 +15,9 @@ import com.example.heatguardapp.data.SensorResultManager
 import com.example.heatguardapp.data.UserInfoEntity
 import com.example.heatguardapp.ml.ModelHeatguard
 import com.example.heatguardapp.repository.UserRepository
-import com.example.heatguardapp.utils.KDTree
 import com.example.heatguardapp.utils.Resource
 import com.example.heatguardapp.utils.UserDataPreferencesManager
+import com.example.heatguardapp.utils.findSimilarObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,7 +31,7 @@ class SensorsViewModel @Inject constructor(
     private val sensorResultManager: SensorResultManager,
     private val userPreferences: UserDataPreferencesManager,
     private val userRepository: UserRepository,
-    private val application: Application
+    application: Application
 ) : ViewModel(){
 
     private val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
@@ -129,9 +128,6 @@ class SensorsViewModel @Inject constructor(
                         ambientHumidity = result.data.ambientHumidity
                         ambientTemperature = result.data.ambientTemperature
 
-                        val kdTree = KDTree(userInfoApiList)
-                        val root = kdTree.buildTree()
-
                         val currValue = UserInfoApi(
                             ambientTemperature,
                             skinTemp,
@@ -143,11 +139,13 @@ class SensorsViewModel @Inject constructor(
                             skinRes.toFloat(),
                             0.0f
                         )
-                        val nearestNeighbor = kdTree.findNearestNeighbor(currValue)
+                        val data = findSimilarObject(userInfoApiList, currValue)
 
                         if(togglePrediction){
-                            if (nearestNeighbor != null) {
-                                heatStrokeMessage = nearestNeighbor.heatstroke?.toInt() ?: detectHeatStroke()
+                            heatStrokeMessage = if (data != null) {
+                                data.heatstroke?.toInt()!!
+                            } else{
+                                detectHeatStroke()
                             }
                         }
                     }
@@ -169,7 +167,6 @@ class SensorsViewModel @Inject constructor(
     fun disconnect(){
         sensorResultManager.disconnect()
     }
-
     fun reconnect(){
         sensorResultManager.disconnect()
         sensorResultManager.reconnect()
@@ -194,9 +191,7 @@ class SensorsViewModel @Inject constructor(
     }
 
     private fun detectHeatStroke(): Int {
-//        val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
-//        ,,,0.1,,,,1
-//            val inputArray = floatArrayOf(37.7f, 37.15631672f, 39.43051572f, 0.1f, 20.88450016f, 85f, 23f, 1f) // testing heatstroke
+//         val inputArray = floatArrayOf(37.7f, 37.15631672f, 39.43051572f, 0.1f, 20.88450016f, 85f, 23f, 1f) // testing heatstroke
 //         use below to use actual sensor readings
             val inputArray = floatArrayOf(
                 ambientTemperature,

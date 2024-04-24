@@ -2,7 +2,7 @@ package com.example.heatguardapp.utils
 
 import com.example.heatguardapp.api.models.UserInfoApi
 import com.example.heatguardapp.data.KDTreeNode
-
+import kotlin.math.abs
 class KDTree(private val points: List<UserInfoApi>) {
 
     private var root: KDTreeNode? = null
@@ -24,6 +24,22 @@ class KDTree(private val points: List<UserInfoApi>) {
 
         val left = buildTreeRecursive(points.subList(0, medianIndex), depth + 1)
         val right = buildTreeRecursive(points.subList(medianIndex + 1, points.size), depth + 1)
+
+        return KDTreeNode(medianPoint, left, right, dimension)
+    }
+
+    private fun buildTreeRecursiveInternal(points: List<UserInfoApi>, depth: Int): KDTreeNode? {
+        if (points.isEmpty()) {
+            return null
+        }
+
+        val dimension = depth % UserInfoApi::class.java.declaredFields.size
+        points.sortedBy { it::class.java.declaredFields[dimension].getFloat(it) }
+        val medianIndex = points.size / 2
+        val medianPoint = points[medianIndex]
+
+        val left = buildTreeRecursiveInternal(points.subList(0, medianIndex), depth + 1)
+        val right = buildTreeRecursiveInternal(points.subList(medianIndex + 1, points.size), depth + 1)
 
         return KDTreeNode(medianPoint, left, right, dimension)
     }
@@ -81,7 +97,7 @@ class KDTree(private val points: List<UserInfoApi>) {
             if (field.name == "heatstroke") continue // Skip checking heatstroke
             val currentValue = field.getFloat(candidate)
             val targetValue = field.getFloat(target)
-            val percentageDifference = Math.abs(currentValue - targetValue) / targetValue
+            val percentageDifference = abs(currentValue - targetValue) / targetValue
             if (percentageDifference > 0.05) {
                 return false
             }
