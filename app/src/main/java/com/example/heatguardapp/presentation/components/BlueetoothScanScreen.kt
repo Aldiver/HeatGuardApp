@@ -1,18 +1,26 @@
 package com.example.heatguardapp.presentation.components
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -23,8 +31,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -56,6 +66,9 @@ fun BluetoothScanScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val bleConnectionState = viewModel.connectionState
     val loadingMessage = viewModel.initializingMessage
+    val backgroundColor = if (viewModel.togglePrediction) Color.Transparent else Color.Green
+    val toggleColor = if (viewModel.togglePrediction) Color.Red else Color.Green
+    val fontColor = if (viewModel.togglePrediction) Color.Black else Color.White
     val errorMessage = viewModel.errorMessage
 
     DisposableEffect(
@@ -94,9 +107,9 @@ fun BluetoothScanScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         Box(
-            modifier = Modifier.weight(0.9f)
+            modifier = Modifier.weight(0.7f)
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+//                .padding(bottom = 16.dp)
         ){
             LazyVerticalStaggeredGrid(
                 columns = StaggeredGridCells.Fixed(2),
@@ -199,7 +212,9 @@ fun BluetoothScanScreen(
         }
         Row(
             modifier = Modifier.fillMaxSize()
-                .weight(.1f)
+                .weight(.1f),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             when(bleConnectionState){
                 ConnectionState.CurrentlyInitializing -> {
@@ -217,7 +232,7 @@ fun BluetoothScanScreen(
                     Button(
                         onClick = { viewModel.initializeConnection() },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent
+                            containerColor = Color.Red
                         )
                     ){
                         Text(
@@ -227,7 +242,111 @@ fun BluetoothScanScreen(
                 }
 
                 ConnectionState.Connected -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ){
+                        if(viewModel.togglePrediction){
+                            if (viewModel.heatStrokeMessage == 1) {
+                                Text(
+                                    text = "HeatStroke detected",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }else{
+                                Text(
+                                    text = "No HeatStroke detected",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }else{
+                            Text ("")
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(fraction = .9f)
+                                .fillMaxHeight(fraction = 1f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Absolute.SpaceEvenly
+                        ){
+                            Button(
+                                onClick = { viewModel.togglePrediction() },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = backgroundColor,
+                                    contentColor = fontColor
+                                ),
+                                border = BorderStroke(
+                                    width = 5.dp,
+                                    color = toggleColor
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth(fraction = .7f)
+                                    .fillMaxHeight(fraction = .7f)
+                            ){
+                                if(!viewModel.togglePrediction){
+                                    Text(
+                                        text = "Start Prediction",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                }
+                                else{
+                                    Row(
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Start
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.fillMaxHeight(),
+                                            contentAlignment = Alignment.Center
+                                        ){
+                                            Box(
+                                                modifier = Modifier
+                                                    .background(Color.Red)
+                                                    .size(20.dp)
+                                                    .align(Alignment.Center)
+                                            )
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(30.dp),
+                                                color = Color.Red
+                                            )
+                                        }
+                                        Text(
+                                            text = "Stop Prediction",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.padding(start = 20.dp)
+                                        )
+                                    }
+                                }
+                            }
 
+                            if(viewModel.togglePrediction){
+                                Image(
+                                    painter = painterResource(id = R.drawable.store),
+                                    contentDescription = "",
+                                    modifier = Modifier
+                                        .fillMaxHeight(fraction = .7f)
+                                        .clickable {
+                                            val userInfo = UserInfoEntity(
+                                                ambientTemp = viewModel.ambientTemperature,
+                                                skinTemp = viewModel.skinTemp,
+                                                coreTemp = viewModel.coreTemp,
+                                                ambientHumidity = (viewModel.ambientHumidity / 100).toFloat(),
+                                                bmi = viewModel.bmi,
+                                                heartRate = viewModel.heartRate.toFloat(),
+                                                age = viewModel.age,
+                                                skinRes = viewModel.skinRes.toFloat(),
+                                                heatstroke = if (viewModel.heatStrokeMessage == 0) 1f else 0f
+                                            )
+                                            userInfoViewModel.insertUserInfo(userInfo)
+                                        }
+                                )
+                            }else{
+                                Spacer(
+                                    modifier = Modifier.fillMaxHeight(fraction = .75f)
+                                )
+                            }
+                        }
+                    }
                 }
 
                 ConnectionState.Disconnected -> {
@@ -246,107 +365,4 @@ fun BluetoothScanScreen(
 
         }
     }
-
-
-
-
-        Row(
-            modifier = Modifier.fillMaxWidth()
-        ){
-            Card(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .weight(3f),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (viewModel.heatStrokeMessage == 1) Color.Red else Color.Green,
-                ),
-            ) {
-
-                    Box(
-                        contentAlignment = Alignment.Center
-                    ) {
-                        when(viewModel.connectionState){
-
-                            ConnectionState.CurrentlyInitializing -> {
-                                Text(
-                                    text = "Connecting to BLE Device"
-                                )
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(50.dp),
-                                    color = Color.LightGray
-                                )
-                            }
-
-                            ConnectionState.Uninitialized ->{
-                                Button(
-                                    onClick = { viewModel.initializeConnection() },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color.Transparent
-                                    )
-                                ){
-                                    Text(
-                                        text = "BLE Uninitialized: Reconnect Again"
-                                    )
-                                }
-                            }
-
-                            ConnectionState.Connected ->
-                                Button(
-                                    onClick = { viewModel.togglePrediction() },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color.Transparent
-                                    ),
-                                ){
-                                    if (viewModel.togglePrediction) {
-                                        if (viewModel.heatStrokeMessage != 1) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(50.dp),
-                                                color = Color.LightGray
-                                            )
-                                            Text(
-                                                text = "Analyzing Sensor Data"
-                                            )
-                                        }else{
-                                            Text(
-                                                text = "HeatStroke detected"
-                                            )
-                                        }
-                                    } else {
-                                        Text(
-                                            text = "Start Prediction"
-                                        )
-                                    }
-                                }
-                        }
-
-                }
-            }
-            Button(
-                onClick = {
-                    // Create a UserInfoEntity object with the required data from SensorsViewModel
-                    val userInfo = UserInfoEntity(
-                        ambientTemp = viewModel.ambientTemperature,
-                        skinTemp = viewModel.skinTemp,
-                        coreTemp = viewModel.coreTemp,
-                        ambientHumidity = (viewModel.ambientHumidity / 100).toFloat(),
-                        bmi = viewModel.bmi,
-                        heartRate = viewModel.heartRate.toFloat(),
-                        age = viewModel.age,
-                        skinRes = viewModel.skinRes.toFloat(),
-                        heatstroke = if (viewModel.heatStrokeMessage == 0) 1f else 0f
-                    )
-
-                    userInfoViewModel.insertUserInfo(userInfo)
-                },
-//                colors = ButtonDefaults.buttonColors(
-//                    containerColor = Color.Transparent
-//                ),
-                modifier = Modifier
-                    .weight(1f),
-                enabled = viewModel.togglePrediction
-            ) {
-                Text(text = "Store")
-            }
-        }
 }
-

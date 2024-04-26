@@ -144,10 +144,13 @@ class SensorsViewModel @Inject constructor(
                         if(togglePrediction){
                             heatStrokeMessage = if (data != null) {
                                 data.heatstroke?.toInt()!!
+                                Log.d("AutoCalib", "calibrated hs value: ${data.heatstroke.toInt()}")
                             } else{
                                 detectHeatStroke()
                             }
                         }
+
+                        Log.d("Heatstroke", "Toggle: $togglePrediction HS Data $heatStrokeMessage")
                     }
 
                     is Resource.Loading -> {
@@ -169,7 +172,7 @@ class SensorsViewModel @Inject constructor(
     }
     fun reconnect(){
         sensorResultManager.disconnect()
-        sensorResultManager.reconnect()
+        initializeConnection()
     }
 
     fun initializeConnection(){

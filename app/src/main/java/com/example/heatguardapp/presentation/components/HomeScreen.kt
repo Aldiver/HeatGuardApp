@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,7 +41,7 @@ fun HomeScreen(
              Text(
                  text = "HeatGuard",
                  style = MaterialTheme.typography.headlineMedium,
-                 modifier = Modifier,
+                 modifier = Modifier.weight(1f),
                  color = MaterialTheme.colorScheme.primary
              )
 
@@ -48,6 +49,7 @@ fun HomeScreen(
                  painter = painterResource(id = R.drawable.stat),
                  contentDescription = "",
                  modifier = Modifier
+                     .size(32.dp)
                      .clickable {
                          navController.navigate("stat_screen")
                      }
