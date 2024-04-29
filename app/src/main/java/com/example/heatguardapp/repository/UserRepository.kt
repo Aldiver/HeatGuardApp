@@ -3,6 +3,7 @@ package com.example.heatguardapp.repository
 import androidx.lifecycle.LiveData
 import com.example.heatguardapp.dao.UserInfoDao
 import com.example.heatguardapp.data.UserInfoEntity
+import kotlinx.coroutines.flow.Flow
 
 class UserRepository(private val userInfoDao: UserInfoDao) {
 
@@ -10,7 +11,7 @@ class UserRepository(private val userInfoDao: UserInfoDao) {
         return userInfoDao.getUserInfoLive()
     }
 
-    fun getUserInfo(): List<UserInfoEntity> {
+    fun getUserInfo(): Flow<List<UserInfoEntity>> {
         return userInfoDao.getUserInfo()
     }
 

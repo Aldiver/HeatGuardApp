@@ -20,6 +20,7 @@ import com.example.heatguardapp.utils.UserDataPreferencesManager
 import com.example.heatguardapp.utils.findSimilarObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.tensorflow.lite.DataType
@@ -37,11 +38,7 @@ class SensorsViewModel @Inject constructor(
     private val model: ModelHeatguard = ModelHeatguard.newInstance(application.applicationContext)
     private val inputFeature0: TensorBuffer = TensorBuffer.createFixedSize(intArrayOf(1, 8), DataType.FLOAT32)
 
-    private val userInfoApiList = mutableListOf<UserInfoApi>()
-
-    private fun getUserInfo(): List<UserInfoEntity> {
-        return userRepository.getUserInfo()
-    }
+    private var userInfoApiList by mutableStateOf<List<UserInfoApi>>(emptyList())
 
     var age by mutableFloatStateOf(0f)
         private set
@@ -61,22 +58,26 @@ class SensorsViewModel @Inject constructor(
                     Log.d("SensorInit", "agecap value: $ageCap")
                 }
             }
+        }
 
-            val userInfoList = getUserInfo()
-
-            // Convert UserInfoEntity objects to UserInfoApi
-            for (userInfoEntity in userInfoList) {
-                val userInfoApi = UserInfoApi(
-                    ambientTemp = userInfoEntity.ambientTemp,
-                    skinTemp = userInfoEntity.skinTemp,
-                    coreTemp = userInfoEntity.coreTemp,
-                    ambientHumidity = userInfoEntity.ambientHumidity,
-                    bmi = userInfoEntity.bmi,
-                    heartRate = userInfoEntity.heartRate,
-                    age = userInfoEntity.age,
-                    skinRes = userInfoEntity.skinRes
-                )
-                userInfoApiList.add(userInfoApi)
+        viewModelScope.launch(Dispatchers.IO) {
+            userRepository.getUserInfo().collect { userInfoList ->
+                Log.d("User Info List:", "$userInfoList")
+                withContext(Dispatchers.Main){
+                    for (userInfoEntity in userInfoList) {
+                        val userInfoApi = UserInfoApi(
+                            ambientTemp = userInfoEntity.ambientTemp,
+                            skinTemp = userInfoEntity.skinTemp,
+                            coreTemp = userInfoEntity.coreTemp,
+                            ambientHumidity = userInfoEntity.ambientHumidity,
+                            bmi = userInfoEntity.bmi,
+                            heartRate = userInfoEntity.heartRate,
+                            age = userInfoEntity.age,
+                            skinRes = userInfoEntity.skinRes
+                        )
+                        userInfoApiList += userInfoApi
+                    }
+                }
             }
         }
     }
@@ -128,6 +129,9 @@ class SensorsViewModel @Inject constructor(
                         ambientHumidity = result.data.ambientHumidity
                         ambientTemperature = result.data.ambientTemperature
 
+                        //Auto calib
+                        Log.d("ApiList", "$userInfoApiList")
+
                         val currValue = UserInfoApi(
                             ambientTemperature,
                             skinTemp,
@@ -140,16 +144,19 @@ class SensorsViewModel @Inject constructor(
                             0.0f
                         )
                         val data = findSimilarObject(userInfoApiList, currValue)
+                        Log.d("Similar Object:", "$data")
 
                         if(togglePrediction){
-                            heatStrokeMessage = if (data != null) {
-                                data.heatstroke?.toInt()!!
-                                Log.d("AutoCalib", "calibrated hs value: ${data.heatstroke.toInt()}")
-                            } else{
-                                detectHeatStroke()
-                            }
+                            detectHeatStroke(data?.heatstroke?.toInt())
+//                            heatStrokeMessage = if (data != null) {
+//                                data.heatstroke?.toInt()!!
+//                                notifyAlert(heatStrokeMessage)
+//                                Log.d("AutoCalib", "calibrated hs value: ${data.heatstroke.toInt()}")
+//                            } else{
+//                                Log.d("AutoCalib:", "Failed autocalib checker")
+//                                detectHeatStroke()
+//                            }
                         }
-
                         Log.d("Heatstroke", "Toggle: $togglePrediction HS Data $heatStrokeMessage")
                     }
 
@@ -193,9 +200,12 @@ class SensorsViewModel @Inject constructor(
         sensorResultManager.closeConnection()
     }
 
-    private fun detectHeatStroke(): Int {
+    private fun detectHeatStroke(data : Int?){
 //         val inputArray = floatArrayOf(37.7f, 37.15631672f, 39.43051572f, 0.1f, 20.88450016f, 85f, 23f, 1f) // testing heatstroke
 //         use below to use actual sensor readings
+        if (data != null){
+            heatStrokeMessage = data
+        }else{
             val inputArray = floatArrayOf(
                 ambientTemperature,
                 skinTemp,
@@ -212,12 +222,13 @@ class SensorsViewModel @Inject constructor(
             val result = outputs.outputFeature0AsTensorBuffer.floatArray[0]
 
             val finalOutput = if (result > 0.5) 1 else 0
-            notifyAlert(finalOutput)
-//            heatStrokeMessage = finalOutput
-            return finalOutput
+            heatStrokeMessage = finalOutput
+
+        }
+        notifyAlert(heatStrokeMessage)
     }
 
-    fun togglePrediction() {
+    fun togglePredictionButton() {
         togglePrediction = !togglePrediction
     }
 }

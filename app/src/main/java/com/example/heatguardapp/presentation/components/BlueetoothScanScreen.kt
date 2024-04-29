@@ -1,8 +1,6 @@
 package com.example.heatguardapp.presentation.components
 
 import android.annotation.SuppressLint
-import androidx.compose.animation.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -17,26 +16,34 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -46,12 +53,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.example.heatguardapp.R
+import com.example.heatguardapp.api.models.UserInfoApi
 import com.example.heatguardapp.data.ConnectionState
 import com.example.heatguardapp.data.UserInfoEntity
 import com.example.heatguardapp.domain.SensorData
 import com.example.heatguardapp.presentation.viewmodel.SensorsViewModel
 import com.example.heatguardapp.presentation.viewmodel.UserInfoViewModel
 import com.example.heatguardapp.presentation.permissions.PermissionUtils
+import com.example.heatguardapp.utils.findSimilarObject
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
@@ -60,6 +69,7 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 @Composable
 fun BluetoothScanScreen(
     viewModel: SensorsViewModel = hiltViewModel(),
+    userInforViewModel: UserInfoViewModel = hiltViewModel(),
     userInfoViewModel: UserInfoViewModel = hiltViewModel()
 ) {
     val permissionState = rememberMultiplePermissionsState(permissions = PermissionUtils.permissions)
@@ -69,6 +79,24 @@ fun BluetoothScanScreen(
     val backgroundColor = if (viewModel.togglePrediction) Color.Transparent else Color.Green
     val toggleColor = if (viewModel.togglePrediction) Color.Red else Color.Green
     val fontColor = if (viewModel.togglePrediction) Color.Black else Color.White
+    var infoFound by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+    var userInfo by remember { mutableStateOf(
+        UserInfoEntity(
+        ambientTemp = 0f,
+        skinTemp = 0f,
+        coreTemp = 0f,
+        ambientHumidity = 0f,
+        bmi = 0f,
+        heartRate = 0f,
+        age =0f,
+        skinRes = 0f,
+        heatstroke = 0f,
+    ))}
+    val userInfoList by userInforViewModel.getUserInfoLive().observeAsState(initial = emptyList())
+
+    // Define a mutable state for userInfoApiList
+    val userInfoApiList = remember { mutableStateOf<List<UserInfoApi>>(emptyList()) }
     val errorMessage = viewModel.errorMessage
 
     DisposableEffect(
@@ -94,6 +122,22 @@ fun BluetoothScanScreen(
             }
         }
     )
+
+    LaunchedEffect(key1 = userInfoList) {
+        userInfoApiList.value = userInfoList.map { userInfo ->
+            UserInfoApi(
+                ambientTemp = userInfo.ambientTemp,
+                skinTemp = userInfo.skinTemp,
+                coreTemp = userInfo.coreTemp,
+                ambientHumidity = userInfo.ambientHumidity,
+                bmi = userInfo.bmi,
+                heartRate = userInfo.heartRate,
+                age = userInfo.age,
+                skinRes = userInfo.skinRes,
+                heatstroke = userInfo.heatstroke
+            )
+        }
+    }
 
     LaunchedEffect(key1 = permissionState.allPermissionsGranted) {
         if (permissionState.allPermissionsGranted) {
@@ -270,7 +314,7 @@ fun BluetoothScanScreen(
                             horizontalArrangement = Arrangement.Absolute.SpaceEvenly
                         ){
                             Button(
-                                onClick = { viewModel.togglePrediction() },
+                                onClick = { viewModel.togglePredictionButton() },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = backgroundColor,
                                     contentColor = fontColor
@@ -326,7 +370,7 @@ fun BluetoothScanScreen(
                                     modifier = Modifier
                                         .fillMaxHeight(fraction = .7f)
                                         .clickable {
-                                            val userInfo = UserInfoEntity(
+                                            userInfo = UserInfoEntity(
                                                 ambientTemp = viewModel.ambientTemperature,
                                                 skinTemp = viewModel.skinTemp,
                                                 coreTemp = viewModel.coreTemp,
@@ -337,7 +381,9 @@ fun BluetoothScanScreen(
                                                 skinRes = viewModel.skinRes.toFloat(),
                                                 heatstroke = if (viewModel.heatStrokeMessage == 0) 1f else 0f
                                             )
-                                            userInfoViewModel.insertUserInfo(userInfo)
+                                            infoFound = checkUserInfo(userInfo, userInfoApiList.value)
+                                            showDialog = true
+//                                             userInfoViewModel.insertUserInfo(userInfo)
                                         }
                                 )
                             }else{
@@ -353,7 +399,7 @@ fun BluetoothScanScreen(
                     Button(
                         onClick = { viewModel.reconnect() },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent
+                            containerColor = Color.Red
                         )
                     ){
                         Text(
@@ -365,4 +411,93 @@ fun BluetoothScanScreen(
 
         }
     }
+
+    if (showDialog) {
+        InsertUserInfoDialog(
+            onConfirm = {
+                // Call the insertUserInfo function if all input are okay
+                userInfoViewModel.insertUserInfo(userInfo)
+                showDialog = false
+            },
+            isFound = infoFound,
+            onDismiss = { showDialog = false },
+            data = userInfo
+        )
+    }
+}
+
+fun checkUserInfo(info: UserInfoEntity, list: List<UserInfoApi>): Boolean{
+    val currValue = UserInfoApi(
+        ambientTemp = info.ambientTemp,
+        skinTemp = info.skinTemp,
+        coreTemp = info.coreTemp,
+        ambientHumidity = info.ambientHumidity,
+        bmi = info.bmi,
+        heartRate = info.heartRate,
+        age = info.age,
+        skinRes = info.skinRes,
+        heatstroke = info.heatstroke
+    )
+
+    return findSimilarObject(list, currValue) != null
+}
+
+@Composable
+fun InsertUserInfoDialog(
+    onConfirm: () -> Unit,
+    isFound: Boolean,
+    onDismiss: () -> Unit,
+    data: UserInfoEntity
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            if (!isFound) {
+                Button(
+                    onClick = onConfirm,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text("Yes")
+                }
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
+                )
+            ) {
+                Text("Cancel")
+            }
+        },
+        title = {
+            if (!isFound){
+                Text("Store user data in database?")
+            }else{
+                Text("Cannot Store Data in Database")
+            }
+        },
+        text = {
+            if (!isFound) {
+                val userInfoText = buildString {
+                    append("A.Temp: ${data.ambientTemp} °C\n")
+                    append("S.Temp: ${data.skinTemp} °C\n")
+                    append("C.Temp: ${data.coreTemp} °C\n")
+                    append("A.Hum: ${data.ambientHumidity} %\n")
+                    append("BMI: ${data.bmi}\n")
+                    append("HR: ${data.heartRate}\n")
+                    append("Age: ${data.age}\n")
+                    append("S.Res: ${data.skinRes}\n")
+                    append("HeatStroke: ${data.heatstroke}")
+                }
+                Text(text = userInfoText)
+            }
+            else{
+                Text(text = "Data already stored\n")
+            }
+        }
+    )
 }

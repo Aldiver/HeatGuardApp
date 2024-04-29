@@ -6,6 +6,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import com.example.heatguardapp.data.UserInfoEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserInfoDao {
@@ -22,5 +23,5 @@ interface UserInfoDao {
     suspend fun deleteAllUsers()
 
     @Query("SELECT * FROM user_info")
-    fun getUserInfo(): List<UserInfoEntity>
+    fun getUserInfo(): Flow<List<UserInfoEntity>>
 }

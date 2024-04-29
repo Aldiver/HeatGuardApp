@@ -2,7 +2,6 @@ package com.example.heatguardapp.presentation.viewmodel
 
 import android.app.Application
 import android.util.Log
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.heatguardapp.api.models.UserInfoApi
 import com.example.heatguardapp.api.repository.UpdateModelRepository
