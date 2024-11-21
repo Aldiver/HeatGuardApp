@@ -261,7 +261,7 @@ fun BluetoothScanScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             when(bleConnectionState){
-                ConnectionState.CurrentlyInitializing -> {
+                ConnectionState.Connected -> {
                     Text(
                         modifier = Modifier
                             .fillMaxSize()
@@ -285,7 +285,8 @@ fun BluetoothScanScreen(
                     }
                 }
 
-                ConnectionState.Connected -> {
+                ConnectionState.CurrentlyInitializing -> {
+//              ConnectionState.Connected -> {
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.SpaceBetween,
