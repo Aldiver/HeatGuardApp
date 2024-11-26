@@ -167,7 +167,7 @@ fun BluetoothScanScreen(
                             R.drawable.electrocardiogram,
                             viewModel.heartRate.toString(),
                             "bpm",
-                            viewModel.heartRate > 100
+                            viewModel.heartRate > 120
                         ),
                         SensorData(
                             "Skin Res",
