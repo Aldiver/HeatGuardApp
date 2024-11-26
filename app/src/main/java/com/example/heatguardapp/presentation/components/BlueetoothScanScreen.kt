@@ -1,6 +1,7 @@
 package com.example.heatguardapp.presentation.components
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -69,15 +70,14 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 @Composable
 fun BluetoothScanScreen(
     viewModel: SensorsViewModel = hiltViewModel(),
-    userInforViewModel: UserInfoViewModel = hiltViewModel(),
     userInfoViewModel: UserInfoViewModel = hiltViewModel()
 ) {
     val permissionState = rememberMultiplePermissionsState(permissions = PermissionUtils.permissions)
     val lifecycleOwner = LocalLifecycleOwner.current
     val bleConnectionState = viewModel.connectionState
     val loadingMessage = viewModel.initializingMessage
-    val backgroundColor = if (viewModel.togglePrediction) Color.Transparent else Color.Green
-    val toggleColor = if (viewModel.togglePrediction) Color.Red else Color.Green
+    val backgroundColor = if (viewModel.togglePrediction) Color.Transparent else com.example.heatguardapp.ui.theme.DarkGreen
+    val toggleColor = if (viewModel.togglePrediction) Color.Red else com.example.heatguardapp.ui.theme.DarkGreen
     val fontColor = if (viewModel.togglePrediction) Color.Black else Color.White
     var infoFound by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
@@ -93,7 +93,7 @@ fun BluetoothScanScreen(
         skinRes = 0f,
         heatstroke = 0f,
     ))}
-    val userInfoList by userInforViewModel.getUserInfoLive().observeAsState(initial = emptyList())
+    val userInfoList by userInfoViewModel.getUserInfoLive().observeAsState(initial = emptyList())
 
     // Define a mutable state for userInfoApiList
     val userInfoApiList = remember { mutableStateOf<List<UserInfoApi>>(emptyList()) }
@@ -261,7 +261,7 @@ fun BluetoothScanScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             when(bleConnectionState){
-                ConnectionState.Connected -> {
+                ConnectionState.CurrentlyInitializing -> {
                     Text(
                         modifier = Modifier
                             .fillMaxSize()
@@ -285,8 +285,8 @@ fun BluetoothScanScreen(
                     }
                 }
 
-                ConnectionState.CurrentlyInitializing -> {
-//              ConnectionState.Connected -> {
+//                ConnectionState.CurrentlyInitializing -> {
+              ConnectionState.Connected -> {
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.SpaceBetween,
@@ -295,12 +295,12 @@ fun BluetoothScanScreen(
                         if(viewModel.togglePrediction){
                             if (viewModel.heatStrokeMessage == 1) {
                                 Text(
-                                    text = "HeatStroke detected",
+                                    text = "Heatstress detected",
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                             }else{
                                 Text(
-                                    text = "No HeatStroke detected",
+                                    text = "No Heatstress detected",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -375,13 +375,14 @@ fun BluetoothScanScreen(
                                                 ambientTemp = viewModel.ambientTemperature,
                                                 skinTemp = viewModel.skinTemp,
                                                 coreTemp = viewModel.coreTemp,
-                                                ambientHumidity = (viewModel.ambientHumidity / 100).toFloat(),
+                                                ambientHumidity = (viewModel.ambientHumidity).toFloat(),
                                                 bmi = viewModel.bmi,
                                                 heartRate = viewModel.heartRate.toFloat(),
                                                 age = viewModel.age,
                                                 skinRes = viewModel.skinRes.toFloat(),
                                                 heatstroke = if (viewModel.heatStrokeMessage == 0) 1f else 0f
                                             )
+                                            Log.d("Add List:", "$userInfo")
                                             infoFound = checkUserInfo(userInfo, userInfoApiList.value)
                                             showDialog = true
 //                                             userInfoViewModel.insertUserInfo(userInfo)
@@ -492,7 +493,7 @@ fun InsertUserInfoDialog(
                     append("HR: ${data.heartRate}\n")
                     append("Age: ${data.age}\n")
                     append("S.Res: ${data.skinRes}\n")
-                    append("HeatStroke: ${data.heatstroke}")
+                    append("Heatstress: ${data.heatstroke}")
                 }
                 Text(text = userInfoText)
             }

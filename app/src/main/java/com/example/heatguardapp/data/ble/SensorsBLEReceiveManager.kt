@@ -188,6 +188,7 @@ class SensorsBLEReceiveManager @Inject constructor(
             characteristic: BluetoothGattCharacteristic?,
             status: Int
         ) {
+            Log.i("BLE Write", "Write Characteristic: $characteristic");
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.i("BLE Write", "Characteristic written successfully $characteristic")
             } else {

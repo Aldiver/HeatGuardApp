@@ -136,7 +136,7 @@ class SensorsViewModel @Inject constructor(
                             ambientTemperature,
                             skinTemp,
                             coreTemp,
-                            (ambientHumidity / 100).toFloat(),
+                            (ambientHumidity).toFloat(),
                             bmi,
                             heartRate.toFloat(),
                             age,

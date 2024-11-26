@@ -133,7 +133,7 @@ fun UserInfoListItem(
                 Text(text = "HR: ${userInfo.heartRate}")
                 Text(text = "Age: ${userInfo.age}")
                 Text(text = "S.Res: ${userInfo.skinRes}")
-                Text(text = "HeatStroke: ${userInfo.heatstroke}")
+                Text(text = "Heatstress: ${userInfo.heatstroke}")
             }
 
             IconButton(onClick = onDelete) {
