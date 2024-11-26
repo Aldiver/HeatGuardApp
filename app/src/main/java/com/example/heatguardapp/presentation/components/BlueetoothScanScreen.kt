@@ -166,36 +166,42 @@ fun BluetoothScanScreen(
                             "Heart Rate",
                             R.drawable.electrocardiogram,
                             viewModel.heartRate.toString(),
-                            "bpm"
+                            "bpm",
+                            viewModel.heartRate > 100
                         ),
                         SensorData(
                             "Skin Res",
                             R.drawable.hydrating,
                             if (viewModel.skinRes > 0) "High" else "Low",
-                            ""),
+                            "",
+                            viewModel.skinRes == 0),
                         SensorData(
                             "Core Temp",
                             R.drawable.core_temp,
                             String.format("%.2f", viewModel.coreTemp),
-                            "°C"
+                            "°C",
+                            viewModel.coreTemp > 38.5f
                         ),
                         SensorData(
                             "Skin Temp",
                             R.drawable.temperature,
                             String.format("%.2f", viewModel.skinTemp),
-                            "°C"
+                            "°C",
+                            viewModel.skinTemp > 37.5f
                         ),
                         SensorData(
                             "A. Humid",
                             R.drawable.humidity,
                             viewModel.ambientHumidity.toString(),
-                            "%"
+                            "%",
+                            viewModel.ambientHumidity > 70
                         ),
                         SensorData(
                             "A. Temperature",
                             R.drawable.temperatures,
                             viewModel.ambientTemperature.toString(),
-                            "°C"
+                            "°C",
+                            viewModel.ambientTemperature > 38.0f
                         ),
                     ).forEach { sensorData ->
                         item {
@@ -204,7 +210,7 @@ fun BluetoothScanScreen(
                                     .padding(8.dp)
                                     .fillMaxWidth(),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    containerColor = if (sensorData.isHigh) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.surfaceVariant,
                                 ),
 
                                 ) {
@@ -244,7 +250,8 @@ fun BluetoothScanScreen(
             if(bleConnectionState == ConnectionState.CurrentlyInitializing){
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.background(Color.Black.copy(alpha = .5f))
+                    modifier = Modifier
+                        .background(Color.Black.copy(alpha = .5f))
                         .fillMaxSize()
                 ){
                     CircularProgressIndicator(
@@ -295,12 +302,12 @@ fun BluetoothScanScreen(
                         if(viewModel.togglePrediction){
                             if (viewModel.heatStrokeMessage == 1) {
                                 Text(
-                                    text = "Heatstress detected",
+                                    text = "Possible Heatstress Predicted",
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                             }else{
                                 Text(
-                                    text = "No Heatstress detected",
+                                    text = "No Possible Heatstress Predicted",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
